@@ -73,12 +73,11 @@ async def scrap_pdfs(context, category: str, url: str):
     if old_pdfs:
         for pdf_name, pdf_data in pdfs.items():
             if pdf_name in old_pdfs:
-                try:
+                try: # try to parse date found for new pdf
                     new_pdf_date = datetime.strptime(pdf_data['pdf_date'], '%Y/%m/%d')
-                    old_pdf_date = datetime.strptime(old_pdfs[pdf_name]['pdf_date'], '%Y/%m/%d')
                 except ValueError as exe:
                     print("PDF: {pdf_name} for category {category} could not be processed")
-                if new_pdf_date > old_pdf_date:
+                if pdf_name not in old_pdfs or new_pdf_date > old_pdf_date:
                     updated_pdfs.update({pdf_name: pdf_data})
             else:
                 updated_pdfs.update({pdf_name: pdf_data})
