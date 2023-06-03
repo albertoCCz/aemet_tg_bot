@@ -72,21 +72,22 @@ class MyHTMLParser(HTMLParser):
                 self.listen_for_name = False
         
         if self.listen_for_date:
-            data_tokens: list = data.replace('.', ' ').split(' ')
-            for i, token in enumerate(data_tokens):
-                if token in es_months:
-                    day, month, year = data_tokens[i-2], token, data_tokens[i+2]
-                    try:
-                        possible_date = f"{year}/{es_month_to_number(month):02}/{day}"
-                        date = datetime.strptime(possible_date, "%Y/%m/%d")
-                    except ValueError:
-                        date = datetime(2000, 1, 1)
-                        # TODO: handle bad formatted dates in a better way, probably notifying users...
-                        print(f"\nWarning: Could not parse date '{possible_date}' - bad formatted, for pdf '{self.last_pdf}'. For now I will ignore it...\n")
+            match = re.findall(r"[0-9]{1,2} de [a-z]{1,10} de[l]{0,1} [0-9]{3,4}", data)
+            if match:
+                match = match[0]
+                if 'del' in match:
+                    match = match.replace('del', 'de')
+                day, month, year = match.split(' de ')
+                try:
+                    possible_date = f"{year}/{es_month_to_number(month):02}/{day}"
+                    date = datetime.strptime(possible_date, "%Y/%m/%d")
+                except ValueError:
+                    date = datetime(2000, 1, 1)
+                    # TODO: handle bad formatted dates in a better way, probably notifying users...
+                    print(f"\nWarning: Could not parse date '{possible_date}' - bad formatted, for pdf '{self.last_pdf}'. For now I will ignore it...\n")
                     
-                    self.pdfs[self.last_pdf]['date'] = date.strftime("%Y/%m/%d")
-                    self.listen_for_date = False
-                    break
+                self.pdfs[self.last_pdf]['date'] = date.strftime("%Y/%m/%d")
+                self.listen_for_date = False
 
     def __format_pdfs_found(self):
         if len(self.pdfs) > 0:
