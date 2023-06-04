@@ -18,7 +18,7 @@ logging.basicConfig(
 TEST = True
 BOT_TOKEN = os.environ['BOT_TOKEN']
 CHAT_IDS = {
-    'TEST': os.environ['CHAT_ID_TEST']
+    'TEST': os.environ['CHAT_ID_TEST'],
     'A1': os.environ['CHAT_ID_A1'],
     'A2': os.environ['CHAT_ID_A2'],
     'C1': os.environ['CHAT_ID_C1']
@@ -67,12 +67,12 @@ async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
     if TEST:
         for group in AEMET_URLS.keys():
             if group == 'TEST':
-                for category, url in AEMET_URLS.items():
+                for category, url in AEMET_URLS[group].items():
                     await scrap_pdfs(context, group=group, category=category, url=url)
     else:
         for group in AEMET_URLS.keys():
             if group != 'TEST':
-                for category, url in AEMET_URLS.items():
+                for category, url in AEMET_URLS[group].items():
                     await scrap_pdfs(context, group=group, category=category, url=url)
     
 async def scrap_pdfs(context, group: str, category: str, url: str):
