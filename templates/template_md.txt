@@ -1,4 +1,4 @@
-:star: Nuevo archivo disponible!
+:star: ¡Nuevo archivo disponible\!
 
 - Categoría: *{category}*
 - Archivo: [{pdf_url}]({pdf_name})
