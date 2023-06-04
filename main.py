@@ -114,6 +114,8 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
                 json.dump(pdfs, f)
 
             mssg = get_updated_pdfs_mssg(category, pdf_name, pdf_data)
+            if TEST:
+                print(f"\nCHAT ID:  {CHAT_IDS[group]}\n")
             await context.bot.send_message(chat_id=CHAT_IDS[group], text=mssg, parse_mode='HTML')
 
 
