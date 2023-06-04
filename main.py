@@ -64,6 +64,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
+    print(f"\nSCRAP COORDINATOR: TEST={TEST}\n")
     if TEST:
         for group in AEMET_URLS.keys():
             if group == 'TEST':
