@@ -84,7 +84,7 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
     parser.feed(page)
     pdfs = parser.get_pdfs()
 
-    pdf_file_path = f"{PDF_LISTS_PATH}/pdfs-list-{category.replace(' ', '-')}.json"
+    pdf_file_path = f"{PDF_LISTS_PATH}/pdfs-list-{group}-{category.replace(' ', '-')}.json"
 
     # open 'old' list of pdfs
     try:
