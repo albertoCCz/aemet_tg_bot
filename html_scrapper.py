@@ -79,14 +79,14 @@ class MyHTMLParser(HTMLParser):
                     match = match.replace('del', 'de')
                 day, month, year = match.split(' de ')
                 try:
-                    possible_date = f"{year}/{es_month_to_number(month):02}/{day}"
-                    date = datetime.strptime(possible_date, "%Y/%m/%d")
+                    possible_date = f"{day}/{es_month_to_number(month):02}/{year}"
+                    date = datetime.strptime(possible_date, "%d/%m/%Y")
                 except ValueError:
                     date = datetime(2000, 1, 1)
                     # TODO: handle bad formatted dates in a better way, probably notifying users...
                     print(f"\nWarning: Could not parse date '{possible_date}' - bad formatted, for pdf '{self.last_pdf}'. For now I will ignore it...\n")
                     
-                self.pdfs[self.last_pdf]['date'] = date.strftime("%Y/%m/%d")
+                self.pdfs[self.last_pdf]['date'] = date.strftime("%d/%m/%Y")
                 self.listen_for_date = False
 
     def __format_pdfs_found(self):

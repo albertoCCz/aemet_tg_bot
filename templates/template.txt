@@ -1,4 +1,4 @@
-&#128226; Nuevo archivo disponible
+&#128226; Nuevo archivo disponible.
 
 - Acceso: <b>{category}</b>
 - &#128196; Archivo: <a href="{pdf_url}">{pdf_name}</a>
