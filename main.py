@@ -69,6 +69,7 @@ async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
         for group in AEMET_URLS.keys():
             if group == 'TEST':
                 for category, url in AEMET_URLS[group].items():
+                    print(f"\nCALLING scrap_pdfs with group={group}, category={category}, url={url}\n")
                     await scrap_pdfs(context, group=group, category=category, url=url)
     else:
         for group in AEMET_URLS.keys():
