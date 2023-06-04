@@ -1,5 +1,5 @@
-Nuevo archivo disponible  &#128276;
+&#128226; Nuevo archivo disponible
 
-- Acceso: <b>{category}</b>
+- Categoría: <b>{category}</b>
 - &#128196; Archivo: <a href="{pdf_url}">{pdf_name}</a>
-- &#128336; Fecha del documento: <b>{pdf_date}</b>
+- &#128336; Fecha de publicación: <b>{pdf_date}</b>
