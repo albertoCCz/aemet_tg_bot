@@ -15,18 +15,28 @@ logging.basicConfig(
 )
 
 # ---------- config
-CHAT_ID = os.environ['CHAT_ID']
 BOT_TOKEN = os.environ['BOT_TOKEN']
+CHAT_IDS = {
+    'A1': os.environ['CHAT_ID_A1'],
+    'A2': os.environ['CHAT_ID_A2'],
+    'C1': os.environ['CHAT_ID_C1']
+}
 START_MSSG = 'Os mantendré informados!'
 TEMPLATE = './templates/template.txt'
 PDF_LISTS_PATH = './pdfs-registry'
 AEMET_URLS = {
     # LABEL     : URL
-    'A1 Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022',
-    'A2 Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a2/acceso_libre/acceso_libre_2021_2022',
-    'C1 Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_c1/acceso_libre/acceso_libre_2021_2022',
-    'A1 Interna': 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022',
-    'A2 Interna': 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a2/promocion_interna/acceso_interna_2021_2022',
+    'A1': {
+        'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022',
+        'Interna': 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022',
+    },
+    'A2': {
+        'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a2/acceso_libre/acceso_libre_2021_2022',
+        'Interna': 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a2/promocion_interna/acceso_interna_2021_2022',
+    },
+    'C1': {
+        'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_c1/acceso_libre/acceso_libre_2021_2022',
+    }
 }
 TIME_INTERVAL = 30    # in seconds
 # ----------
@@ -49,10 +59,11 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
-    for category, url in AEMET_URLS.items():
-        await scrap_pdfs(context, category=category, url=url)
+    for group in AEMET_URLS.keys():
+        for category, url in AEMET_URLS.items():
+            await scrap_pdfs(context, group=group, category=category, url=url)
     
-async def scrap_pdfs(context, category: str, url: str):
+async def scrap_pdfs(context, group: str, category: str, url: str):
     # get 'new' list of pdfs
     page = get_url_html(url)
     parser = MyHTMLParser()
@@ -91,7 +102,7 @@ async def scrap_pdfs(context, category: str, url: str):
                 json.dump(pdfs, f)
 
             mssg = get_updated_pdfs_mssg(category, pdf_name, pdf_data)
-            await context.bot.send_message(chat_id=CHAT_ID, text=mssg, parse_mode='HTML')
+            await context.bot.send_message(chat_id=CHAT_IDS[group], text=mssg, parse_mode='HTML')
 
 
 if __name__ == '__main__':
