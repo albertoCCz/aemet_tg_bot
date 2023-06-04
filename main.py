@@ -24,7 +24,7 @@ CHAT_IDS = {
     'C1': os.environ['CHAT_ID_C1']
 }
 START_MSSG = 'Os mantendré informados!'
-TEMPLATE = './templates/template.txt'
+TEMPLATE = './templates/template_md.txt'
 PDF_LISTS_PATH = './pdfs-registry'
 AEMET_URLS = {
     # LABEL     : URL
@@ -118,7 +118,7 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
             mssg = get_updated_pdfs_mssg(category, pdf_name, pdf_data)
             if TEST:
                 print(f"\nCHAT ID:  {CHAT_IDS[group]}\n")
-            await context.bot.send_message(chat_id=CHAT_IDS[group], text=mssg, parse_mode='HTML')
+            await context.bot.send_message(chat_id=CHAT_IDS[group], text=mssg, parse_mode='MarkdownV2')
 
 
 if __name__ == '__main__':
