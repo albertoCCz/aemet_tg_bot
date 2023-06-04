@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 # ---------- config
-TEST = True
+TEST = False
 BOT_TOKEN = os.environ['BOT_TOKEN']
 CHAT_IDS = {
     'TEST': os.environ['CHAT_ID_TEST'],
