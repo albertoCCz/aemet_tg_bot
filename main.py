@@ -15,8 +15,10 @@ logging.basicConfig(
 )
 
 # ---------- config
+TEST = True
 BOT_TOKEN = os.environ['BOT_TOKEN']
 CHAT_IDS = {
+    'TEST': os.environ['CHAT_ID_TEST']
     'A1': os.environ['CHAT_ID_A1'],
     'A2': os.environ['CHAT_ID_A2'],
     'C1': os.environ['CHAT_ID_C1']
@@ -26,6 +28,9 @@ TEMPLATE = './templates/template.txt'
 PDF_LISTS_PATH = './pdfs-registry'
 AEMET_URLS = {
     # LABEL     : URL
+    'TEST': {
+        'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022',
+    },
     'A1': {
         'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022',
         'Interna': 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022',
@@ -59,9 +64,16 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
-    for group in AEMET_URLS.keys():
-        for category, url in AEMET_URLS.items():
-            await scrap_pdfs(context, group=group, category=category, url=url)
+    if TEST:
+        for group in AEMET_URLS.keys():
+            if group == 'TEST':
+                for category, url in AEMET_URLS.items():
+                    await scrap_pdfs(context, group=group, category=category, url=url)
+    else:
+        for group in AEMET_URLS.keys():
+            if group != 'TEST':
+                for category, url in AEMET_URLS.items():
+                    await scrap_pdfs(context, group=group, category=category, url=url)
     
 async def scrap_pdfs(context, group: str, category: str, url: str):
     # get 'new' list of pdfs
