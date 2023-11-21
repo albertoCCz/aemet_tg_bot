@@ -1,9 +1,15 @@
 import requests
 import re
 import json
+import logging as log
 from html.parser import HTMLParser
 from datetime import datetime
 from pprint import PrettyPrinter
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 pprint = PrettyPrinter(indent=4, depth=4, sort_dicts=False)
 
@@ -72,12 +78,20 @@ class MyHTMLParser(HTMLParser):
                 self.listen_for_name = False
         
         if self.listen_for_date:
-            match = re.findall(r"[0-9]{1,2} de [a-z]{1,10} de[l]{0,1} [0-9]{3,4}", data)
+            match = re.findall(r"[0-9]{1,2} de [a-z]{1,10} de[l]{0,1} [0-9]{3,4}|[0-9]{1,2} de [a-z]{1,10}", data)
             if match:
                 match = match[0]
                 if 'del' in match:
                     match = match.replace('del', 'de')
-                day, month, year = match.split(' de ')
+                date_components = match.split(' de ')
+                if len(date_components) == 3:
+                    day, month, year = date_components
+                elif len(date_components) == 2:
+                    day, month = date_components
+                    year = datetime.now().year
+                else:
+                    log.error("Date '%s' could not be parsed into day, month and year" % date_components)
+                    
                 try:
                     possible_date = f"{day}/{es_month_to_number(month):02}/{year}"
                     date = datetime.strptime(possible_date, "%d/%m/%Y")
