@@ -6,9 +6,9 @@ from html.parser import HTMLParser
 from datetime import datetime
 from pprint import PrettyPrinter
 
-logging.basicConfig(
+log.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=log.INFO
 )
 
 pprint = PrettyPrinter(indent=4, depth=4, sort_dicts=False)
