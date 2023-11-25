@@ -8,14 +8,15 @@ from telegram.ext import filters, MessageHandler, ApplicationBuilder, ContextTyp
 
 from html_scrapper import MyHTMLParser, get_url_html
 
-
+TEST = False
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format='%(asctime)s | %(name)s | %(levelname)s | %(message)s',
+    level=logging.INFO if not TEST else logging.DEBUG
 )
+LOG = logging.getLogger(__name__)
+
 
 # ---------- config
-TEST = False
 BOT_TOKEN = os.environ['BOT_TOKEN']
 CHAT_IDS = {
     'TEST': os.environ['CHAT_ID_TEST'],
@@ -23,10 +24,10 @@ CHAT_IDS = {
     'A2': os.environ['CHAT_ID_A2'],
     'C1': os.environ['CHAT_ID_C1']
 }
-START_MSSG = 'Os mantendré informados!'
-TEMPLATE = './templates/template.txt'
+START_MSSG     = 'Os mantendré informados!'
+TEMPLATE       = './templates/template.txt'
 PDF_LISTS_PATH = './pdfs-registry'
-AEMET_URLS = {
+AEMET_URLS     = {
     # LABEL     : URL
     'TEST': {
         'Libre'  : 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022',
@@ -64,17 +65,20 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
-    print(f"\nSCRAP COORDINATOR: TEST={TEST}\n")
+    LOG.debug(f"\nSCRAP COORDINATOR: TEST=%s\n", TEST)
     if TEST:
         for group in AEMET_URLS.keys():
             if group == 'TEST':
                 for category, url in AEMET_URLS[group].items():
-                    print(f"\nCALLING scrap_pdfs with group={group}, category={category}, url={url}\n")
+                    LOG.debug("\nCALLING scrap_pdfs with group=%s, category=%s, url=%s\n",
+                              group, category, url)
                     await scrap_pdfs(context, group=group, category=category, url=url)
     else:
         for group in AEMET_URLS.keys():
             if group != 'TEST':
                 for category, url in AEMET_URLS[group].items():
+                    LOG.debug("\nCALLING scrap_pdfs with group=%s, category=%s, url=%s\n",
+                              group, category, url)
                     await scrap_pdfs(context, group=group, category=category, url=url)
     
 async def scrap_pdfs(context, group: str, category: str, url: str):
@@ -91,7 +95,7 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
         with open(pdf_file_path, 'r') as f:
             old_pdfs = json.load(f)
     except:
-        print("No previous pdfs file found.")
+        LOG.info("No previous pdfs file found.")
         old_pdfs = None
 
     updated_pdfs = {}
@@ -101,7 +105,8 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
                 try: # try to parse date found for new pdf
                     new_pdf_date = datetime.strptime(pdf_data['pdf_date'], '%d/%m/%Y')
                 except Exception as exe:
-                     print(f"PDF: {pdf_name} for category {category} could not be processed: {exe}")
+                     LOG.warning("PDF '%s' for category '%s' could not be processed: '%s'",
+                                 pdf_name, category, exe)
                      
                 old_pdf_date = datetime.strptime(old_pdfs[pdf_name]['pdf_date'], '%d/%m/%Y')
                 if new_pdf_date > old_pdf_date:
@@ -117,8 +122,8 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
                 json.dump(pdfs, f)
 
             mssg = get_updated_pdfs_mssg(category, pdf_name, pdf_data)
-            if TEST:
-                print(f"\nCHAT ID:  {CHAT_IDS[group]}\n")
+
+            LOG.debug("\nCHAT ID:  %s\n", CHAT_IDS[group])
             await context.bot.send_message(chat_id=CHAT_IDS[group], text=mssg, parse_mode='HTML')
 
 

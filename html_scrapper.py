@@ -1,15 +1,16 @@
 import requests
 import re
 import json
-import logging as log
+import logging
 from html.parser import HTMLParser
 from datetime import datetime
 from pprint import PrettyPrinter
 
-log.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=log.INFO
+logging.basicConfig(
+    format='%(asctime)s | %(name)s | %(levelname)s | %(message)s',
+    level=logging.INFO
 )
+LOG = logging.getLogger(__name__)
 
 pprint = PrettyPrinter(indent=4, depth=4, sort_dicts=False)
 
@@ -41,6 +42,8 @@ es_months = ["enero",
              "octubre",
              "noviembre",
              "diciembre"]
+
+DEFAULT_DATE = datetime(2000, 1, 1)
 
 
 def es_month_to_number(month: str) -> int:
@@ -83,6 +86,7 @@ class MyHTMLParser(HTMLParser):
                 match = match[0]
                 if 'del' in match:
                     match = match.replace('del', 'de')
+
                 date_components = match.split(' de ')
                 if len(date_components) == 3:
                     day, month, year = date_components
@@ -90,15 +94,18 @@ class MyHTMLParser(HTMLParser):
                     day, month = date_components
                     year = datetime.now().year
                 else:
-                    log.error("Date '%s' could not be parsed into day, month and year" % date_components)
+                    LOG.warning("Date '%s' could not be parsed into day, month and year", match)
+                    year, month, day = DEFAULT_DATE.year, DEFAULT_DATE.month, DEFAULT_DATE.day
+                    LOG.warning("Assigning default date '%s'", DEFAULT_DATE.strftime("%d/%m/%Y"))
                     
                 try:
                     possible_date = f"{day}/{es_month_to_number(month):02}/{year}"
                     date = datetime.strptime(possible_date, "%d/%m/%Y")
                 except ValueError:
-                    date = datetime(2000, 1, 1)
+                    date = DEFAULT_DATE
                     # TODO: handle bad formatted dates in a better way, probably notifying users...
-                    print(f"\nWarning: Could not parse date '{possible_date}' - bad formatted, for pdf '{self.last_pdf}'. For now I will ignore it...\n")
+                    LOG.warning("Date '%s' - bad formatted, for pdf '%s'. For now I will ignore it...\n",
+                                possible_date, self.last_pdf)
                     
                 self.pdfs[self.last_pdf]['date'] = date.strftime("%d/%m/%Y")
                 self.listen_for_date = False
@@ -117,14 +124,4 @@ class MyHTMLParser(HTMLParser):
     def get_pdfs(self) -> list:
         self.__format_pdfs_found()
         return self.pdfs
-                                 
 
-if __name__ == '__main__':
-    aemet_url = 'https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022'
-    page = get_url_html(aemet_url)
-    parser = MyHTMLParser()
-    parser.feed(page)
-    pdfs = parser.get_pdfs()
-    print(pdfs)
-    print("Number of pdfs found:", len(pdfs))
-    
