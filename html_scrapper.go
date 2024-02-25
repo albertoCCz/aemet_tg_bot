@@ -224,14 +224,19 @@ func main() {
 
 	ctxs := make([]tele.Context, 20)
 	bot.Handle("/start", func (c tele.Context) error {
+		for i := range len(ctxs) {
+			if ctx := ctxs[i]; ctx != nil && *ctx.Chat() == *c.Chat() {
+				return nil
+			}
+		}
 		ctxs = append(ctxs, c)
 		return c.Send(bot_config.StartMessage)
 	})
 
-	go bot.Start()
+	bot.Start()
 
 	err_chan := make(chan ProcessingError, 50)
-	for {
+	for range 0 {
 		go process_updates(ctxs, err_chan)
 		select {
 		case <-err_chan:
