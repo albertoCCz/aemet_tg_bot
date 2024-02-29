@@ -11,43 +11,91 @@ import (
 	"time"
 	"os"
 	"net/http"
+	"encoding/json"
 	"golang.org/x/net/html"
 	tele "gopkg.in/telebot.v3"
 )
 
-// ----------
-type BotConfig struct {
-	TimeInterval time.Duration
-	ChatIds      map[string]string
-	StartMessage string
-	TemplatePath string
-	RegistryPath string
-	AemetUrls    map[string]map[string]string
+// main structs. The herarchy is:
+// botConfig
+//   |_ ...
+//   |_ []chatConfig
+//     |_ ...
+//     |_ []selectiveProc
+
+type selectiveProc struct {
+	name         string
+	templatePath string
+	registryPath string
+	url          string
 }
 
-var (
-	bot_config = BotConfig{
-		TimeInterval: 5 * time.Second,    // in seconds
-		ChatIds: map[string]string{
-			"TEST": os.Getenv("TG_AEMET_TOKEN"),
-		},
-		StartMessage: "Os mantendré informados!",
-		TemplatePath: "./templates/template_fmt.txt",
-		RegistryPath: "./pdfs-registry",
-		AemetUrls: map[string]map[string]string{
-			"TEST": {
-				"Libre"  : "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022",
-			},
-		},
-	}
-	MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
-	DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
-)
+type chatConfig struct {
+	chatId         string
+	name           string
+	selectiveProcs []selectiveProc
+}
 
-const(
+func (c *chatConfig) Recipient() string {
+	return c.chatId
+}
+
+type botConfig struct {
+	token        string
+	timeInterval time.Duration
+	chatConfigs  []chatConfig
+}
+
+const (
 	DATE_REGEXP = `[0-9]{1,2} de[l]{0,1} [a-z]{1,10} de[l]{0,1} [0-9]{3,4}|[0-9]{1,2} de [a-z]{1,10}`
 	DATE_LAYOUT = "02/01/2006"
 )
+
+var bot_config = botConfig{
+	token: os.Getenv("TG_AEMET_TOKEN"),
+	timeInterval: 5 * time.Second,
+	chatConfigs: []chatConfig{
+		chatConfig{
+			chatId: os.Getenv("CHAT_ID_TEST_1"),
+			name: "CHAT-1",
+			selectiveProcs: []selectiveProc{
+				selectiveProc{
+					name:          "Test1",
+					templatePath: "./templates/template_fmt.txt",
+					registryPath:  "./pdfs-registry/pdfs-chat1-test1.json",
+					url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022",
+				},
+				selectiveProc{
+					name:          "Test2",
+					templatePath: "./templates/template_fmt.txt",
+					registryPath:  "./pdfs-registry/pdfs-chat1-test2.json",
+					url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022",
+				},
+			},
+		},
+
+		chatConfig{
+			chatId: os.Getenv("CHAT_ID_TEST_2"),
+			name: "CHAT-2",
+			selectiveProcs: []selectiveProc{
+				selectiveProc{
+					name:          "Test1",
+					templatePath: "./templates/template_fmt.txt",
+					registryPath:  "./pdfs-registry/pdfs-chat2-test1.json",
+					url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022",
+				},
+				selectiveProc{
+					name:          "Test2",
+					templatePath: "./templates/template_fmt.txt",
+					registryPath:  "./pdfs-registry/pdfs-chat2-test2.json",
+					url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022",
+				},
+			},
+		},
+	},
+}
+var MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
+var DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 type PDF struct {
 	url string
@@ -72,14 +120,14 @@ func parse_pdf_date(pdf *PDF) error {
 			// day
 			day_int, err = strconv.Atoi(s_comp[0])
 			if err != nil {
-				log.Printf("Could not parse day '%s' as int", s_comp[0])
+				log.Printf("Could not parse day '%s' as int\n", s_comp[0])
 				parsing_ok = false
 			}
 
 			// month
 			month_time, ok := MONTHS_ES[s_comp[1]]
 			if !ok {
-				log.Printf("Could not parse month '%s' as int", s_comp[1])
+				log.Printf("Could not parse month '%s' as int\n", s_comp[1])
 				parsing_ok = false
 			}
 
@@ -89,13 +137,13 @@ func parse_pdf_date(pdf *PDF) error {
 			} else {
 				year_int, err = strconv.Atoi(s_comp[2])
 				if err != nil {
-					log.Printf("Could not parse year '%s' as int", s_comp[2])
+					log.Printf("Could not parse year '%s' as int\n", s_comp[2])
 					parsing_ok = false
 				}
 			}
 
 			if !parsing_ok {
-				log.Printf("Could not parse date from date string '%s'.\n Setting default date: %v", s, DEFAULT_DATE)
+				log.Printf("Could not parse date from date string '%s'.\n Setting default date: %v\n", s, DEFAULT_DATE)
 				pdf.date = DEFAULT_DATE.Format(DATE_LAYOUT)
 				return errors.New(fmt.Sprintf("Date could not be parsed from '%s'", s))
 			}
@@ -107,10 +155,9 @@ func parse_pdf_date(pdf *PDF) error {
 }
 
 func build_pdf(node *html.Node, a *html.Attribute) (PDF, error) {
-	var pdf PDF
-
 	if node.FirstChild == nil { return PDF{}, errors.New("Node has no child") }
 
+	var pdf PDF
 	pdf.url = a.Val
 	pdf.name = strings.TrimSpace(node.FirstChild.Data)
 
@@ -157,63 +204,156 @@ func gen_pdfs(r io.Reader, pdfs chan PDF) {
 	return
 }
 
-func read_complete_file(path string) string {
-	if f, err := os.Open(bot_config.TemplatePath); err != nil {
-		log.Fatalf("Could not open template file: %s", err)
-		return ""
-	} else {
-		if t, err := io.ReadAll(f); err != nil {
-			log.Fatalf("Could not read teamplate file: %s", err)
-			return ""
-		} else {
-			return string(t)
-		}
-	}
-}
-
-var template = read_complete_file(bot_config.TemplatePath)
-
-type ProcessingError int
+type ProcessingErrorCode int
 const (
-	UpdateError ProcessingError = iota
+	SendMessageError ProcessingErrorCode = iota + 1
+	ReadTemplateError
+	ReadRegistryError
+	WriteRegistryError
+	UnmarshalRegistryError
+	MarshalRegistryError
+	GetUrlContentError
 )
 
-func process_updates(ctxs []tele.Context, err_ch chan ProcessingError) {
-	for _, c := range ctxs {
-		proc := func () {
-			if c != nil {
-				var client *http.Client = &http.Client{}
-				res, err := client.Get(bot_config.AemetUrls["TEST"]["Libre"])
-				if err != nil && res.StatusCode == 200 {
-					log.Fatalf("Something went wrong getting url. StatusCode: %d", res.StatusCode)
+type processingErrorMessage struct {
+	errCode  ProcessingErrorCode
+	chatName string
+	procName string
+	pdfName  string
+	message  error
+}
+
+type pdfRegistry map[string]map[string]string
+
+func process_updates(bot *tele.Bot, bot_config *botConfig, err_ch chan processingErrorMessage) {
+	var proc func(chatConfig)
+	proc = func(c chatConfig) {
+		for _, sp := range c.selectiveProcs {
+			log.Printf("[INFO] Processing updates for chat %s[%s], selective process '%s'", c.name, c.chatId, sp.name)
+
+			err_message := processingErrorMessage{
+				chatName: c.name,
+				procName: sp.name,
+				pdfName: "",
+			}
+
+			var client *http.Client = &http.Client{}
+			res, err := client.Get(sp.url)
+			if err != nil && res.StatusCode == 200 {
+				log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Something went wrong getting url. StatusCode: %d: '%s'\n", c.name, sp.name, res.StatusCode, err)
+				err_message.errCode = GetUrlContentError
+				err_message.message = err
+				err_ch <- err_message
+				res.Body.Close()
+				return
+			}
+
+			template, err := os.ReadFile(sp.templatePath)
+			if err != nil {
+				log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not read teamplate from path '%s'\n", c.name, sp.name, sp.templatePath)
+				err_message.errCode = ReadTemplateError
+				err_message.message = err
+				err_ch <- err_message
+				res.Body.Close()
+				return
+			}
+
+			parse_registry := true
+			registry_data, err := os.ReadFile(sp.registryPath)
+			if err != nil {
+				log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not read registry from path '%s'\n", c.name, sp.name, sp.registryPath)
+				err_message.errCode = ReadRegistryError
+				err_message.message = err
+				err_ch <- err_message
+				parse_registry = false
+				// file will be created later, so we dont return in this case
+			}
+
+			var registry = pdfRegistry{}
+			if parse_registry {
+				err = json.Unmarshal(registry_data, &registry)
+				if err != nil {
+					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not parse JSON from registry data\n", c.name, sp.name)
+					err_message.errCode = UnmarshalRegistryError
+					err_message.message = err
+					err_ch <- err_message
+					res.Body.Close()
+					return
+				}
+			}
+
+			pdfs := make(chan PDF)
+			go gen_pdfs(res.Body, pdfs)
+			for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
+				send_pdf := false
+				// TODO: compare pdfs by date
+				if _, exists := registry[pdf.name]; !exists {
+					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%s'\n", c.name, sp.name, pdf.name)
+					registry[pdf.name] = map[string]string{"pdf_url": pdf.url, "pdf_date": pdf.date}
+					send_pdf = true
+				} else {
+					prev_date, _ := time.Parse(DATE_LAYOUT, registry[pdf.name]["pdf_date"])
+					new_date, err  := time.Parse(DATE_LAYOUT, pdf.date)
+					if err != nil { new_date = DEFAULT_DATE	}
+					if new_date.Compare(prev_date) > 0 {
+						log.Printf("[INFO] Chat '%s' - Selective process '%s'. Updated pdf found: '%s'. Date changed %s -> %s\n",
+							c.name, sp.name, pdf.name, registry[pdf.name]["pdf_date"], pdf.date)
+						registry[pdf.name]["pdf_date"] = pdf.date
+						send_pdf = true
+					}
 				}
 
-				pdfs := make(chan PDF)
-				go gen_pdfs(res.Body, pdfs)
-				for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
-					message := fmt.Sprintf(template,
-						"TEST",
+				if send_pdf {
+					registry_data, err = json.Marshal(registry)
+					if err != nil {
+						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not JSON encode registry\n", c.name, sp.name)
+						err_message.errCode = MarshalRegistryError
+						err_message.pdfName = pdf.name
+						err_message.message = err
+						err_ch <- err_message
+						continue
+					}
+
+					err = os.WriteFile(sp.registryPath, registry_data, 0664)
+					if err != nil {
+						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not write registry to file '%s'\n", c.name, sp.name, sp.registryPath)
+						err_message.errCode = WriteRegistryError
+						err_message.pdfName = pdf.name
+						err_message.message = err
+						err_ch <- err_message
+						continue
+					}
+
+					message := fmt.Sprintf(string(template),
+						sp.name,
 						"https://www.aemet.es",
 						pdf.url,
 						pdf.name,
 						pdf.date,
 					)
-					if err := c.Send(message, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
-						err_ch <- UpdateError
+					if _, err := bot.Send(&c, message, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
+						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not send message to chat%s\n", c.name, sp.name, err)
+						err_message.errCode = SendMessageError
+						err_message.pdfName = pdf.name
+						err_message.message = err
+						err_ch <- err_message
+						continue
 					}
-					res.Body.Close()
-				}
-			}
+				} // each pdf
+			}  // each sp
+			res.Body.Close()
 		}
-		go proc()
+	}
+	for _, c := range bot_config.chatConfigs {
+		go proc(c)
 	}
 	return
 }
 
 func main() {
 	sett := tele.Settings{
-		Token: bot_config.ChatIds["TEST"],
-		Poller: &tele.LongPoller{Timeout: bot_config.TimeInterval},
+		Token: bot_config.token,
+		Poller: &tele.LongPoller{Timeout: bot_config.timeInterval},
 	}
 
 	bot, err := tele.NewBot(sett)
@@ -222,28 +362,18 @@ func main() {
 		return
 	}
 
-	ctxs := make([]tele.Context, 20)
-	bot.Handle("/start", func (c tele.Context) error {
-		for i := range len(ctxs) {
-			if ctx := ctxs[i]; ctx != nil && *ctx.Chat() == *c.Chat() {
-				return nil
-			}
-		}
-		ctxs = append(ctxs, c)
-		return c.Send(bot_config.StartMessage)
-	})
+	go bot.Start()
 
-	bot.Start()
-
-	err_chan := make(chan ProcessingError, 50)
-	for range 0 {
-		go process_updates(ctxs, err_chan)
+	err_chan := make(chan processingErrorMessage, 50)
+	for {
 		select {
 		case <-err_chan:
-			log.Printf("Error when processing updates, %s", err)
+			// we don't want to sleep in this case, so all errors are handled at once
+			continue
 		default:
-			log.Println("All good!")
+			log.Println("[INFO] New round!")
+			go process_updates(bot, &bot_config, err_chan)
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(bot_config.timeInterval)
 	}
 }
