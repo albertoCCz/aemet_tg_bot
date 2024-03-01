@@ -19,9 +19,11 @@ import (
 // main structs. The herarchy is:
 // botConfig
 //   |_ ...
+//   |_ chatAdminConfig
 //   |_ []chatConfig
 //     |_ ...
 //     |_ []selectiveProc
+
 
 type selectiveProc struct {
 	name         string
@@ -40,10 +42,21 @@ func (c *chatConfig) Recipient() string {
 	return c.chatId
 }
 
+type chatAdminConfig struct {
+	chatId           string
+	name             string
+	errMessageFormat string
+}
+
+func (c *chatAdminConfig) Recipient() string {
+	return c.chatId
+}
+
 type botConfig struct {
-	token        string
-	timeInterval time.Duration
-	chatConfigs  []chatConfig
+	token           string
+	timeInterval    time.Duration
+	chatAdminConfig *chatAdminConfig
+	chatConfigs     []chatConfig
 }
 
 const (
@@ -54,6 +67,15 @@ const (
 var bot_config = botConfig{
 	token: os.Getenv("TG_AEMET_TOKEN"),
 	timeInterval: 5 * time.Second,
+	chatAdminConfig: &chatAdminConfig{
+		chatId: os.Getenv("CHAT_ADMIN"),
+		name: "Admin chat",
+		errMessageFormat: "Error: <strong>%s</strong>\n" +
+			"  - chat name: <i>%s</i>\n" +
+			"  - proc name: <i>%s</i>\n" +
+			"  - pdf name:  <i>%s</i>\n" +
+			"  - message:   <pre language=\"console\">%s</pre>\n",
+	},
 	chatConfigs: []chatConfig{
 		chatConfig{
 			chatId: os.Getenv("CHAT_ID_TEST_1"),
@@ -94,6 +116,8 @@ var bot_config = botConfig{
 		},
 	},
 }
+
+
 var MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
 var DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
@@ -215,12 +239,32 @@ const (
 	GetUrlContentError
 )
 
+var processingErrorCodeToString = map[ProcessingErrorCode]string{
+	SendMessageError: "SendMessageError",
+	ReadTemplateError: "ReadTemplateError",
+	ReadRegistryError: "ReadRegistryError",
+	WriteRegistryError: "WriteRegistryError",
+	UnmarshalRegistryError: "UnmarshalRegistryError",
+	MarshalRegistryError: "MarshalRegistryError",
+	GetUrlContentError: "GetUrlContentError",
+}
+
 type processingErrorMessage struct {
 	errCode  ProcessingErrorCode
 	chatName string
 	procName string
 	pdfName  string
 	message  error
+}
+
+func (errMessage *processingErrorMessage) Format (format string) string {
+	return fmt.Sprintf(format,
+		processingErrorCodeToString[errMessage.errCode],
+		errMessage.chatName,
+		errMessage.procName,
+		errMessage.pdfName,
+		errMessage.message,
+	)
 }
 
 type pdfRegistry map[string]map[string]string
@@ -286,7 +330,6 @@ func process_updates(bot *tele.Bot, bot_config *botConfig, err_ch chan processin
 			go gen_pdfs(res.Body, pdfs)
 			for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
 				send_pdf := false
-				// TODO: compare pdfs by date
 				if _, exists := registry[pdf.name]; !exists {
 					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%s'\n", c.name, sp.name, pdf.name)
 					registry[pdf.name] = map[string]string{"pdf_url": pdf.url, "pdf_date": pdf.date}
@@ -367,13 +410,17 @@ func main() {
 	err_chan := make(chan processingErrorMessage, 50)
 	for {
 		select {
-		case <-err_chan:
-			// we don't want to sleep in this case, so all errors are handled at once
-			continue
+		case errMessageData := <-err_chan:
+			if bot_config.chatAdminConfig != nil {
+				errMessage := errMessageData.Format(bot_config.chatAdminConfig.errMessageFormat)
+				if _, err := bot.Send(bot_config.chatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
+					log.Printf("[ERROR] Could not send error message to admin chat: %s", err)
+				}
+			}
 		default:
 			log.Println("[INFO] New round!")
 			go process_updates(bot, &bot_config, err_chan)
+			time.Sleep(bot_config.timeInterval)
 		}
-		time.Sleep(bot_config.timeInterval)
 	}
 }
