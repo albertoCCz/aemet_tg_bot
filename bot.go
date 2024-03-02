@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"os"
+	"errors"
 	"net/http"
 	"encoding/json"
 	tele "gopkg.in/telebot.v3"
@@ -19,6 +20,7 @@ const (
 	UnmarshalRegistryError
 	MarshalRegistryError
 	GetUrlContentError
+	BlankPDFDateError
 )
 
 var processingErrorCodeToString = map[ProcessingErrorCode]string{
@@ -29,6 +31,7 @@ var processingErrorCodeToString = map[ProcessingErrorCode]string{
 	UnmarshalRegistryError: "UnmarshalRegistryError",
 	MarshalRegistryError: "MarshalRegistryError",
 	GetUrlContentError: "GetUrlContentError",
+	BlankPDFDateError: "BlankPDFDateError",
 }
 
 type processingErrorMessage struct {
@@ -115,26 +118,20 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 			}
 
 			pdfs := make(chan PDF)
-			go GenPDFs(res.Body, pdfs)
+			go GenPDFs(res.Body, pdfs) // <- this one closes the channel when finishes
 			for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
-				send_pdf := false
-				if _, exists := registry[pdf.Name]; !exists {
-					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%s'\n", c.Name, sp.Name, pdf.Name)
-					registry[pdf.Name] = map[string]string{"pdf_url": pdf.Url, "pdf_date": pdf.Date}
-					send_pdf = true
-				} else {
-					prev_date, _ := time.Parse(DATE_LAYOUT, registry[pdf.Name]["pdf_date"])
-					new_date, err  := time.Parse(DATE_LAYOUT, pdf.Date)
-					if err != nil { new_date = DEFAULT_DATE	}
-					if new_date.Compare(prev_date) > 0 {
-						log.Printf("[INFO] Chat '%s' - Selective process '%s'. Updated pdf found: '%s'. Date changed %s -> %s\n",
-							c.Name, sp.Name, pdf.Name, registry[pdf.Name]["pdf_date"], pdf.Date)
-						registry[pdf.Name]["pdf_date"] = pdf.Date
-						send_pdf = true
-					}
+				if pdf.Date == "" {
+					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not JSON encode registry\n", c.Name, sp.Name)
+					err_message.errCode = BlankPDFDateError
+					err_message.pdfName = pdf.Name
+					err_message.message = errors.New("PDF Date is blank. This might be due to a error when parsing it")
+					err_ch <- err_message
 				}
 
-				if send_pdf {
+				if _, exists := registry[pdf.Name]; !exists {
+					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%+v'\n", c.Name, sp.Name, pdf)
+					registry[pdf.Name] = map[string]string{"pdf_url": pdf.Url, "pdf_date": pdf.Date}
+
 					registry_data, err = json.Marshal(registry)
 					if err != nil {
 						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not JSON encode registry\n", c.Name, sp.Name)
@@ -170,14 +167,15 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 						err_ch <- err_message
 						continue
 					}
-				} // each pdf
-			}  // each sp
+				} // if pdf !exists
+			} // each pdf
 			res.Body.Close()
-		}
-	}
+		} // each sp
+	} // procChat
 	for _, c := range botConfig.ChatConfigs {
 		go procChat(c)
 	}
+
 	return
 }
 

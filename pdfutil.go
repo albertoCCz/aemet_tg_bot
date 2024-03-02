@@ -62,14 +62,16 @@ func parsePDFDate(pdf *PDF) error {
 			}
 
 			if !parsing_ok {
-				log.Printf("Could not parse date from date string '%s'.\n Setting default date: %v\n", s, DEFAULT_DATE)
-				pdf.Date = DEFAULT_DATE.Format(DATE_LAYOUT)
+				log.Printf("Could not parse date from date string '%s'.\n Leaving PDF date blank\n", s)
+				pdf.Date = ""
 				return errors.New(fmt.Sprintf("Date could not be parsed from '%s'", s))
 			}
+
 			pdf.Date = time.Date(year_int, month_time, day_int, 0, 0, 0, 0, time.UTC).Format(DATE_LAYOUT)
 			return nil
 		}
 	}
+	pdf.Date = ""
 	return errors.New(fmt.Sprintf("Date could not be parsed. Regexp do not match with date string '%s'", pdf.Date))
 }
 
