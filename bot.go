@@ -10,60 +10,6 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-var bot_config = BotConfig{
-	Token: os.Getenv("TG_AEMET_TOKEN"),
-	TimeInterval: 5 * time.Second,
-	ChatAdminConfig: &ChatAdminConfig{
-		ChatId: os.Getenv("CHAT_ADMIN"),
-		Name: "Admin chat",
-		ErrMessageFormat: "Error: <strong>%s</strong>\n" +
-			"  - chat name: <i>%s</i>\n" +
-			"  - proc name: <i>%s</i>\n" +
-			"  - pdf name:  <i>%s</i>\n" +
-			"  - message:   <pre language=\"console\">%s</pre>\n",
-	},
-
-	ChatConfigs: []ChatConfig{
-		ChatConfig{
-			ChatId: os.Getenv("CHAT_ID_TEST_1"),
-			Name: "CHAT-1",
-			SelectiveProcs: []SelectiveProc{
-				SelectiveProc{
-					Name:          "Test1",
-					TemplatePath: "./templates/template_fmt.txt",
-					RegistryPath:  "./pdfs-registry/pdfs-chat1-test1.json",
-					Url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022",
-				},
-				SelectiveProc{
-					Name:          "Test2",
-					TemplatePath: "./templates/template_fmt.txt",
-					RegistryPath:  "./pdfs-registry/pdfs-chat1-test2.json",
-					Url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022",
-				},
-			},
-		},
-
-		ChatConfig{
-			ChatId: os.Getenv("CHAT_ID_TEST_2"),
-			Name: "CHAT-2",
-			SelectiveProcs: []SelectiveProc{
-				SelectiveProc{
-					Name:          "Test1",
-					TemplatePath: "./templates/template_fmt.txt",
-					RegistryPath:  "./pdfs-registry/pdfs-chat2-test1.json",
-					Url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022",
-				},
-				SelectiveProc{
-					Name:          "Test2",
-					TemplatePath: "./templates/template_fmt.txt",
-					RegistryPath:  "./pdfs-registry/pdfs-chat2-test2.json",
-					Url:           "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022",
-				},
-			},
-		},
-	},
-}
-
 type ProcessingErrorCode int
 const (
 	SendMessageError ProcessingErrorCode = iota + 1
@@ -105,7 +51,7 @@ func (errMessage *processingErrorMessage) Format (format string) string {
 
 type pdfRegistry map[string]map[string]string
 
-func processUpdates(bot *tele.Bot, bot_config *BotConfig, err_ch chan processingErrorMessage) {
+func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingErrorMessage) {
 	var proc func(ChatConfig)
 	proc = func(c ChatConfig) {
 		for _, sp := range c.SelectiveProcs {
@@ -141,7 +87,7 @@ func processUpdates(bot *tele.Bot, bot_config *BotConfig, err_ch chan processing
 			parse_registry := true
 			registry_data, err := os.ReadFile(sp.RegistryPath)
 			if err != nil {
-				log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not read registry from path '%s'\n", c.Name, sp.Name, sp.RegistryPath)
+				log.Printf("[WARNING] Chat '%s' - Selective process '%s'. Could not read registry from path '%s'\n", c.Name, sp.Name, sp.RegistryPath)
 				err_message.errCode = ReadRegistryError
 				err_message.message = err
 				err_ch <- err_message
@@ -223,16 +169,19 @@ func processUpdates(bot *tele.Bot, bot_config *BotConfig, err_ch chan processing
 			res.Body.Close()
 		}
 	}
-	for _, c := range bot_config.ChatConfigs {
+	for _, c := range botConfig.ChatConfigs {
 		go proc(c)
 	}
 	return
 }
 
 func main() {
+	var botConfig BotConfig
+	botConfig.SetUp("./botConfig.json")
+
 	sett := tele.Settings{
-		Token: bot_config.Token,
-		Poller: &tele.LongPoller{Timeout: bot_config.TimeInterval},
+		Token: botConfig.Token,
+		Poller: &tele.LongPoller{Timeout: botConfig.TimeInterval},
 	}
 
 	bot, err := tele.NewBot(sett)
@@ -247,16 +196,16 @@ func main() {
 	for {
 		select {
 		case errMessageData := <-err_chan:
-			if bot_config.ChatAdminConfig != nil {
-				errMessage := errMessageData.Format(bot_config.ChatAdminConfig.ErrMessageFormat)
-				if _, err := bot.Send(bot_config.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
+			if botConfig.ChatAdminConfig != nil {
+				errMessage := errMessageData.Format(botConfig.ChatAdminConfig.ErrMessageFormat)
+				if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
 					log.Printf("[ERROR] Could not send error message to admin chat: %s", err)
 				}
 			}
 		default:
 			log.Println("[INFO] New round!")
-			go processUpdates(bot, &bot_config, err_chan)
-			time.Sleep(bot_config.TimeInterval)
+			go processUpdates(bot, &botConfig, err_chan)
+			time.Sleep(botConfig.TimeInterval)
 		}
 	}
 }

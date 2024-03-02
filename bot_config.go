@@ -1,7 +1,13 @@
 package main
 
-import "time"
-
+import (
+	"time"
+	"os"
+    "log"
+	"fmt"
+	"errors"
+    "encoding/json"
+)
 
 var DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 
@@ -42,7 +48,97 @@ func (c *ChatAdminConfig) Recipient() string {
 
 type BotConfig struct {
 	Token           string
+	Name            string
 	TimeInterval    time.Duration
 	ChatAdminConfig *ChatAdminConfig
 	ChatConfigs     []ChatConfig
+}
+
+func loadEnvVars(bc *BotConfig) error {
+	envVar := fmt.Sprintf("BOT_TOKEN_%s", bc.Name)
+	if token, ok := os.LookupEnv(envVar); !ok {
+		return errors.New("[ERROR] Environment variable '%s' is unset")
+	} else {
+		bc.Token = token
+	}
+
+	envVar = fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatAdminConfig.Name)
+	if chatId, ok := os.LookupEnv(envVar); !ok {
+		return errors.New("[ERROR] Environment variable '%s' is unset")
+	} else {
+		bc.ChatAdminConfig.ChatId = chatId
+	}
+
+	for i := range len(bc.ChatConfigs) {
+		if chatId, ok := os.LookupEnv(fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatConfigs[i].Name)); !ok {
+			return errors.New("[ERROR] Environment variable '%s' is unset")
+		} else {
+			bc.ChatConfigs[i].ChatId = chatId
+		}
+	}
+
+	return nil
+}
+
+func obfuscate(bc *BotConfig) {
+	bc.Token = ""
+
+	bc.ChatAdminConfig.ChatId = ""
+	bc.ChatAdminConfig.ErrMessageFormat = ""
+
+	for i := range len(bc.ChatConfigs) {
+		bc.ChatConfigs[i].ChatId = ""
+	}
+}
+
+func (bc BotConfig) WriteFile(path string) error {
+	obfuscate(&bc)
+
+	bc_data, err := json.MarshalIndent(bc, "", "    ")
+	if err != nil {
+		log.Printf("[ERROR] Bot Configuration could not be JSON-encoded: %s\n", err)
+		return err
+	}
+
+	if err = os.WriteFile(path, bc_data, 0664); err != nil {
+		log.Printf("[ERROR] Could not write Bot Configuration to file '%s': %s\n", path, err)
+		return err
+	}
+
+	return nil
+}
+
+func (bc *BotConfig) ReadFile(path string) error {
+	bc_data, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("[ERROR] Could not read Bot Configuration from file '%s': %s\n", path, err)
+		return err
+	}
+
+	if err = json.Unmarshal(bc_data, bc); err != nil {
+		log.Printf("[ERROR] Could not JSON-decode Bot Configuration: %s\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func (bc *BotConfig) SetUp(path string) error {
+	if err := bc.ReadFile(path); err != nil {
+		log.Println("[ERROR] Could not read bot configuration from file")
+		return err
+	}
+
+	bc.ChatAdminConfig.ErrMessageFormat = "Error: <strong>%s</strong>\n" +
+		"  - chat name: <i>%s</i>\n" +
+		"  - proc name: <i>%s</i>\n" +
+		"  - pdf name:  <i>%s</i>\n" +
+		"  - message:   <pre language=\"console\">%s</pre>\n"
+
+	if err := loadEnvVars(bc); err != nil {
+		log.Printf("[ERROR] Could not load environment variables into bot configuration: %s\n", err)
+		return err
+	}
+
+	return nil
 }
