@@ -55,7 +55,7 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 	var proc func(ChatConfig)
 	proc = func(c ChatConfig) {
 		for _, sp := range c.SelectiveProcs {
-			log.Printf("[INFO] Processing updates for chat %s[%s], selective process '%s'", c.Name, c.ChatId, sp.Name)
+			log.Printf("[INFO] Processing updates for chat %s[%s], selective process '%s'\n", c.Name, c.ChatId, sp.Name)
 
 			err_message := processingErrorMessage{
 				chatName: c.Name,
@@ -186,7 +186,7 @@ func main() {
 
 	bot, err := tele.NewBot(sett)
 	if err != nil {
-		log.Fatalf("Could not instantiate bot: %s", err)
+		log.Fatalf("Could not instantiate bot: %s\n", err)
 		return
 	}
 
@@ -199,7 +199,7 @@ func main() {
 			if botConfig.ChatAdminConfig != nil {
 				errMessage := errMessageData.Format(botConfig.ChatAdminConfig.ErrMessageFormat)
 				if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
-					log.Printf("[ERROR] Could not send error message to admin chat: %s", err)
+					log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
 				}
 			}
 		default:
