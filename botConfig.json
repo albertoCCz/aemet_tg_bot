@@ -4,8 +4,7 @@
     "TimeInterval": 5000000000,
     "ChatAdminConfig": {
         "ChatId": "",
-        "Name": "ADMIN",
-        "ErrMessageFormat": ""
+        "Name": "ADMIN"
     },
     "ChatConfigs": [
         {

@@ -39,7 +39,6 @@ func (c *ChatConfig) Recipient() string {
 type ChatAdminConfig struct {
 	ChatId           string
 	Name             string
-	ErrMessageFormat string
 }
 
 func (c *ChatAdminConfig) Recipient() string {
@@ -82,9 +81,7 @@ func loadEnvVars(bc *BotConfig) error {
 
 func obfuscate(bc *BotConfig) {
 	bc.Token = ""
-
 	bc.ChatAdminConfig.ChatId = ""
-	bc.ChatAdminConfig.ErrMessageFormat = ""
 
 	for i := range len(bc.ChatConfigs) {
 		bc.ChatConfigs[i].ChatId = ""
@@ -128,12 +125,6 @@ func (bc *BotConfig) SetUp(path string) error {
 		log.Println("[ERROR] Could not read bot configuration from file")
 		return err
 	}
-
-	bc.ChatAdminConfig.ErrMessageFormat = "Error: <strong>%s</strong>\n" +
-		"  - chat name: <i>%s</i>\n" +
-		"  - proc name: <i>%s</i>\n" +
-		"  - pdf name:  <i>%s</i>\n" +
-		"  - message:   <pre language=\"console\">%s</pre>\n"
 
 	if err := loadEnvVars(bc); err != nil {
 		log.Printf("[ERROR] Could not load environment variables into bot configuration: %s\n", err)

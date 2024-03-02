@@ -39,7 +39,13 @@ type processingErrorMessage struct {
 	message  error
 }
 
-func (errMessage *processingErrorMessage) Format (format string) string {
+func (errMessage *processingErrorMessage) Format() string {
+	format := "Error: <strong>%s</strong>\n" +
+		"  - chat name: <i>%s</i>\n" +
+		"  - proc name: <i>%s</i>\n" +
+		"  - pdf name:  <i>%s</i>\n" +
+		"  - message:   <pre language=\"console\">%s</pre>\n"
+
 	return fmt.Sprintf(format,
 		processingErrorCodeToString[errMessage.errCode],
 		errMessage.chatName,
@@ -52,8 +58,8 @@ func (errMessage *processingErrorMessage) Format (format string) string {
 type pdfRegistry map[string]map[string]string
 
 func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingErrorMessage) {
-	var proc func(ChatConfig)
-	proc = func(c ChatConfig) {
+	var procChat func(ChatConfig)
+	procChat = func(c ChatConfig) {
 		for _, sp := range c.SelectiveProcs {
 			log.Printf("[INFO] Processing updates for chat %s[%s], selective process '%s'\n", c.Name, c.ChatId, sp.Name)
 
@@ -170,7 +176,7 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 		}
 	}
 	for _, c := range botConfig.ChatConfigs {
-		go proc(c)
+		go procChat(c)
 	}
 	return
 }
@@ -197,7 +203,7 @@ func main() {
 		select {
 		case errMessageData := <-err_chan:
 			if botConfig.ChatAdminConfig != nil {
-				errMessage := errMessageData.Format(botConfig.ChatAdminConfig.ErrMessageFormat)
+				errMessage := errMessageData.Format()
 				if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
 					log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
 				}
