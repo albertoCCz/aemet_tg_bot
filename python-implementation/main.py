@@ -51,7 +51,7 @@ TIME_INTERVAL = 30    # in seconds
 def get_updated_pdfs_mssg(category: str, pdf_name: str, pdf_data: dict) -> str:
     with open(TEMPLATE, 'r') as f:
         mssg = f.read()
-        
+
     mssg = mssg.replace('{pdf_name}', pdf_name)
     mssg = mssg.replace('{category}', category)
     mssg = mssg.replace('{pdf_url}', pdf_data['pdf_url'])
@@ -80,7 +80,7 @@ async def scrap_coordinator(context: ContextTypes.DEFAULT_TYPE):
                     LOG.debug("\nCALLING scrap_pdfs with group=%s, category=%s, url=%s\n",
                               group, category, url)
                     await scrap_pdfs(context, group=group, category=category, url=url)
-    
+
 async def scrap_pdfs(context, group: str, category: str, url: str):
     # get 'new' list of pdfs
     page = get_url_html(url)
@@ -107,14 +107,14 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
                 except Exception as exe:
                      LOG.warning("PDF '%s' for category '%s' could not be processed: '%s'",
                                  pdf_name, category, exe)
-                     
+
                 old_pdf_date = datetime.strptime(old_pdfs[pdf_name]['pdf_date'], '%d/%m/%Y')
                 if new_pdf_date > old_pdf_date:
                     updated_pdfs.update({pdf_name: pdf_data})
             else:
                 updated_pdfs.update({pdf_name: pdf_data})
     else:
-        updated_pdfs = pdfs    
+        updated_pdfs = pdfs
 
     if len(updated_pdfs) > 0:
         for pdf_name, pdf_data in updated_pdfs.items():
@@ -130,11 +130,10 @@ async def scrap_pdfs(context, group: str, category: str, url: str):
 if __name__ == '__main__':
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     job_queue = application.job_queue
-    
+
     start_handler = CommandHandler('start', start)
     application.add_handler(start_handler)
 
     job_scrap = job_scrap_pdfs = job_queue.run_repeating(scrap_coordinator, interval=TIME_INTERVAL, first=1)
-    
+
     application.run_polling()
-    

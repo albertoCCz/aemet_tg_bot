@@ -1,0 +1,5 @@
+:star: ¡Nuevo archivo disponible\!
+
+- Categoría: *{category}*
+- Archivo: [{pdf_url}]({pdf_name})
+- Fecha de publicación: *{pdf_date}*
