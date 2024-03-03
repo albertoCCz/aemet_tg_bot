@@ -11,5 +11,5 @@ RUN go mod download && go mod verify
 COPY . .
 RUN go build -v -o /usr/local/bin/app ./...
 
-ENTRYPOINT ["./bot"]
+ENTRYPOINT ["./aemet_tg_bot"]
 CMD ["init", "--bot-config=./botConfig.json"]

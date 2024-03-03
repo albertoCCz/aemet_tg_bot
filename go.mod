@@ -1,4 +1,4 @@
-module example.com/albertoCCz/bot
+module github.com/albertoCCz/aemet_tg_bot
 
 go 1.22.0
 
