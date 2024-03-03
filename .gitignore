@@ -5,5 +5,4 @@ pdfs-registry
 test-*
 *~
 *.html
-go.sum
 bot
