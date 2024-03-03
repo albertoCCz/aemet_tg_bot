@@ -14,6 +14,7 @@ import (
 
 var MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
 const DATE_REGEXP = `[0-9]{1,2} de[l]{0,1} [a-z]{1,10} de[l]{0,1} [0-9]{3,4}|[0-9]{1,2} de [a-z]{1,10}`
+const PDF_SIZE_REGEXP = `\([0-9]{1,3} KB\)`
 const DATE_LAYOUT = "02/01/2006"
 
 type PDF struct {
@@ -75,12 +76,20 @@ func parsePDFDate(pdf *PDF) error {
 	return errors.New(fmt.Sprintf("Date could not be parsed. Regexp do not match with date string '%s'", pdf.Date))
 }
 
+func parsePDFName(pdf *PDF) {
+	var re *regexp.Regexp = regexp.MustCompile(PDF_SIZE_REGEXP)
+	if s := re.FindString(pdf.Name); len(s) > 0 {
+		pdf.Name = strings.ReplaceAll(pdf.Name, s, "")
+	}
+}
+
 func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
 	if node.FirstChild == nil { return PDF{}, errors.New("Node has no child") }
 
 	var pdf PDF
 	pdf.Url = a.Val
 	pdf.Name = strings.TrimSpace(node.FirstChild.Data)
+	parsePDFName(&pdf)
 
 	if node.Parent != nil && node.Parent.Parent != nil {
 		for sibling := node.Parent.Parent.FirstChild; sibling != nil; sibling = sibling.NextSibling {
