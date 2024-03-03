@@ -2,11 +2,11 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "go-rewrite" ]
 
 env:
   IMAGE_NAME: ${{ github.repository }}
-  
+
 jobs:
   docker:
     runs-on: ubuntu-latest
