@@ -3,7 +3,7 @@ This bot has been developed to find new PDF documents in AEMET web pages and sen
 
 ## Usage
 ```console
-usage: bot <command> [--bot-config=<config-path>]
+usage: ./aemet_tg_bot <command> [--bot-config=<config-path>]
 
 commands:
     help       Print this help.

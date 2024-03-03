@@ -257,7 +257,7 @@ func handle_init_command(configPath string) {
 
 func usage() {
 	fmt.Println(
-		"usage: bot <command> [--bot-config=<config-path>]\n\n" +
+		"usage: ./aemet_tg_bot <command> [--bot-config=<config-path>]\n\n" +
 		"commands:\n" +
 	    "    help       Print this help.\n" +
 		"    run        Start running the bot. It needs the --bot-config flag.\n" +
