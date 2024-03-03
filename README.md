@@ -12,9 +12,9 @@ This option requires having docker installed.
       ```console
       $ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
       ```
-    - Define an variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
+    - Define a variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
       ```console
-      $ export BOT_TOKEN_AEMET="<bot-token>"
+      $ export BOT_TOKEN_TEST_BOT="<bot-token>"
       ```
 4. (_Optionally_) Initialise the registries so already uploaded PDFs are not sent to the Telegram groups:
 ```console
@@ -43,9 +43,9 @@ $ go build
       ```console
       $ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
       ```
-    - Define an variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
+    - Define a variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
       ```console
-      $ export BOT_TOKEN_AEMET="<bot-token>"
+      $ export BOT_TOKEN_TEST_BOT="<bot-token>"
       ```
 5. (_Optionally_) Initialise the registries so already uploaded PDFs are not sent to the Telegram groups:
 ```console
