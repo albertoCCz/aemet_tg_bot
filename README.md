@@ -2,9 +2,7 @@
 This bot has been developed to find new PDF documents in AEMET web pages and send them to the relevant Telegram chats.
 
 ## Quickstart
----
 ### Using Docker
----
 This option requires having docker installed.
 
 1. Download the docker image `aemet_tg_bot` from the package section of this repository.
@@ -28,7 +26,6 @@ $ docker run aemet_tg_bot run --bot-config=./botConfig.json
 ```
 
 ### Without Docker
----
 This option requires having Go v1.22 installed.
 
 1. Clone this repository and cd into it:
