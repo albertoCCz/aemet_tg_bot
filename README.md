@@ -1,6 +1,17 @@
 # AEMET Telegram Bot
 This bot has been developed to find new PDF documents in AEMET web pages and send them to the relevant Telegram chats.
 
+## Usage
+```console
+usage: bot <command> [--bot-config=<config-path>]
+
+commands:
+    help       Print this help.
+    run        Start running the bot. It needs the --bot-config flag.
+    init       Initialise the registries by running the bot. It needs the --bot-config flag.
+               Only the error messages to admin chat (if configured) will be sent.
+```
+
 ## Quickstart
 ### Using Docker
 This option requires having docker installed.
