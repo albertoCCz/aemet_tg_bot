@@ -9,13 +9,13 @@ This option requires having docker installed.
 2. Set up the bot configuration in the `./botConfig.json` file.
 3. Set up the necessary environment variables.
     - For each Telegram chat/group defined in `./botConfig.json`, create a environment variable like `<bot-name>_CHAT_ID_<chat-name>`. For example, in linux, if the bot name is `TEST_BOT` and the chat name is `CHAT_1`:
-```console
-$ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
-```
+      ```console
+      $ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
+      ```
     - Define an variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
-```console
-$ export BOT_TOKEN_AEMET="<bot-token>"
-```
+      ```console
+      $ export BOT_TOKEN_AEMET="<bot-token>"
+      ```
 4. (_Optionally_) Initialise the registries so already uploaded PDFs are not sent to the Telegram groups:
 ```console
 $ docker run aemet_tg_bot
@@ -40,13 +40,13 @@ $ go build
 3. Set up the bot configuration in the `./botConfig.json` file. Leave blank the chatId fields and token field, these will be read from the environment variables.
 4. Set up the necessary environment variables.
     - For each Telegram chat/group defined in `./botConfig.json`, create a environment variable like `<bot-name>_CHAT_ID_<chat-name>`. For example, in linux, if the bot name is `TEST_BOT` and the chat name is `CHAT_1`:
-```console
-$ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
-```
+      ```console
+      $ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
+      ```
     - Define an variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
-```console
-$ export BOT_TOKEN_AEMET="<bot-token>"
-```
+      ```console
+      $ export BOT_TOKEN_AEMET="<bot-token>"
+      ```
 5. (_Optionally_) Initialise the registries so already uploaded PDFs are not sent to the Telegram groups:
 ```console
 $ aemet_tg_bot init --bot-config=./botConfig.json
