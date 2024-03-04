@@ -6,6 +6,7 @@ import (
 	"time"
 	"os"
 	"strings"
+	"strconv"
 	"errors"
 	"net/http"
 	"encoding/json"
@@ -178,6 +179,36 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 	return
 }
 
+func is_admin_chat(c *tele.Context, bc *BotConfig) bool {
+	if bc.ChatAdminConfig == nil {
+		log.Println("[WARNING] Admin chat not configured")
+		return false
+	}
+
+	chat := (*c).Chat()
+	if chat == nil {
+		log.Println("[WARNING] Chat not present in Context")
+		return false
+	}
+
+	return strconv.FormatInt(chat.ID, 10) == bc.ChatAdminConfig.ChatId
+}
+
+var commands = []tele.Command{
+	tele.Command{Text: "/help", Description: "Commands info"},
+	tele.Command{Text: "/pause", Description: "Pause the bot"},
+	tele.Command{Text: "/play", Description: "Restart bot if paused"},
+}
+
+func usage_commands() string {
+	usage := "Commands:\n"
+	for _, c := range commands {
+		usage += fmt.Sprintf("<code>%s</code>  %s\n", c.Text, c.Description)
+	}
+
+	return usage
+}
+
 func handle_run_command(configPath string) {
 	var botConfig BotConfig
 	botConfig.SetUp(configPath)
@@ -189,26 +220,56 @@ func handle_run_command(configPath string) {
 
 	bot, err := tele.NewBot(sett)
 	if err != nil {
-		log.Fatalf("Could not instantiate bot: %s\n", err)
+		log.Fatalf("[ERROR] Could not instantiate bot: %s\n", err)
 		return
 	}
+
+	bot.Handle("/help", func (c tele.Context) error {
+		if is_admin_chat(&c, &botConfig) {
+			err = c.Send(usage_commands(), &tele.SendOptions{ParseMode: "HTML"})
+			if err != nil {
+				log.Println("[ERROR] Could not send response for /help command")
+			}
+			return err
+		}
+		return nil
+	})
+
+	paused := false
+	bot.Handle("/pause", func (c tele.Context) error {
+		if is_admin_chat(&c, &botConfig) {
+			paused = true
+		}
+		return nil
+	})
+
+	bot.Handle("/play", func (c tele.Context) error {
+		if is_admin_chat(&c, &botConfig) {
+			paused = false
+		}
+		return nil
+	})
 
 	go bot.Start()
 
 	err_chan := make(chan processingErrorMessage, 50)
 	for {
-		select {
-		case errMessageData := <-err_chan:
-			if botConfig.ChatAdminConfig != nil {
-				errMessage := errMessageData.Format()
-				if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
-					log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
+		if !paused {
+			select {
+			case errMessageData := <-err_chan:
+				if botConfig.ChatAdminConfig != nil {
+					errMessage := errMessageData.Format()
+					if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
+						log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
+					}
 				}
+			default:
+				log.Println("[INFO] New round!")
+				go processUpdates(bot, &botConfig, err_chan, true)
+				time.Sleep(botConfig.TimeInterval)
 			}
-		default:
-			log.Println("[INFO] New round!")
-			go processUpdates(bot, &botConfig, err_chan, true)
-			time.Sleep(botConfig.TimeInterval)
+		} else {
+			time.Sleep(2 * time.Second)
 		}
 	}
 }
