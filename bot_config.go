@@ -56,21 +56,22 @@ type BotConfig struct {
 func loadEnvVars(bc *BotConfig) error {
 	envVar := fmt.Sprintf("BOT_TOKEN_%s", bc.Name)
 	if token, ok := os.LookupEnv(envVar); !ok {
-		return errors.New("[ERROR] Environment variable '%s' is unset")
+		return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
 	} else {
 		bc.Token = token
 	}
 
 	envVar = fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatAdminConfig.Name)
 	if chatId, ok := os.LookupEnv(envVar); !ok {
-		return errors.New("[ERROR] Environment variable '%s' is unset")
+		return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
 	} else {
 		bc.ChatAdminConfig.ChatId = chatId
 	}
 
 	for i := range len(bc.ChatConfigs) {
-		if chatId, ok := os.LookupEnv(fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatConfigs[i].Name)); !ok {
-			return errors.New("[ERROR] Environment variable '%s' is unset")
+		envVar = fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatConfigs[i].Name)
+		if chatId, ok := os.LookupEnv(envVar); !ok {
+			return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
 		} else {
 			bc.ChatConfigs[i].ChatId = chatId
 		}
@@ -128,7 +129,7 @@ func (bc *BotConfig) SetUp(path string) error {
 
 	if err := loadEnvVars(bc); err != nil {
 		log.Printf("[ERROR] Could not load environment variables into bot configuration: %s\n", err)
-		return err
+		os.Exit(-1)
 	}
 
 	return nil
