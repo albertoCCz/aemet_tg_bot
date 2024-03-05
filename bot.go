@@ -118,16 +118,16 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 			pdfs := make(chan PDF)
 			go GenPDFs(res.Body, pdfs) // <- this one closes the channel when finishes
 			for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
-				if pdf.Date == "" {
-					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not JSON encode registry\n", c.Name, sp.Name)
-					err_message.errCode = BlankPDFDateError
-					err_message.pdfName = pdf.Name
-					err_message.message = errors.New("PDF Date is blank. This might be due to a error when parsing it")
-					err_ch <- err_message
-				}
-
 				if _, exists := registry[pdf.Name]; !exists {
 					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%+v'\n", c.Name, sp.Name, pdf)
+					if pdf.Date == "" {
+						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Date not present for pdf '%s'\n", c.Name, sp.Name, pdf.Name)
+						err_message.errCode = BlankPDFDateError
+						err_message.pdfName = pdf.Name
+						err_message.message = errors.New("PDF Date is blank. This might be due to a error when parsing it")
+						err_ch <- err_message
+					}
+
 					registry[pdf.Name] = map[string]string{"pdf_url": pdf.Url, "pdf_date": pdf.Date}
 
 					registry_data, err = json.Marshal(registry)
@@ -303,15 +303,15 @@ func handle_init_command(configPath string) {
 					log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
 				}
 			}
-			fmt.Println("error case")
 		default:
 			if !all_processed {
 				go processUpdates(bot, &botConfig, err_chan, false)
 				all_processed = true
 				time.Sleep(botConfig.TimeInterval * 2)
+			} else {
+				log.Println("[INFO] Registries initialised!")
+				return
 			}
-			log.Println("[INFO] Registries initialised!")
-			return
 		}
 	}
 }
@@ -320,10 +320,11 @@ func usage() {
 	fmt.Println(
 		"usage: ./aemet_tg_bot <command> [--bot-config=<config-path>]\n\n" +
 		"commands:\n" +
-	    "    help       Print this help.\n" +
-		"    run        Start running the bot. It needs the --bot-config flag.\n" +
-		"    init       Initialise the registries by running the bot. It needs the --bot-config flag.\n" +
-		"               Only the error messages to admin chat (if configured) will be sent.\n")
+	    "    help                                 Print this help.\n" +
+		"    run    --bot-config=<config-path>    Start running the bot.\n" +
+		"    init   --bot-config=<config-path>    Initialise the registries by running the bot.\n" +
+		"                                         Only the error messages to admin chat, if\n" +
+		"                                         configured, will be sent.\n")
 }
 
 func nextFlagValue(command, flag string, args []string) string {
