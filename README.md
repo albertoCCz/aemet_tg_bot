@@ -6,10 +6,12 @@ This bot has been developed to find new PDF documents in AEMET web pages and sen
 usage: ./aemet_tg_bot <command> [--bot-config=<config-path>]
 
 commands:
-    help       Print this help.
-    run        Start running the bot. It needs the --bot-config flag.
-    init       Initialise the registries by running the bot. It needs the --bot-config flag.
-               Only the error messages to admin chat (if configured) will be sent.
+
+help                                 Print this help.
+run    --bot-config=<config-path>    Start running the bot.
+init   --bot-config=<config-path>    Initialise the registries by running the bot.
+                                     Only the error messages to admin chat, if
+                                     configured, will be sent.
 ```
 
 ## Quickstart
@@ -19,21 +21,22 @@ This option requires having docker installed.
 1. Download the docker image `aemet_tg_bot` from the package section of this repository.
 2. Set up the bot configuration in the `./botConfig.json` file.
 3. Set up the necessary environment variables.
-    - For each Telegram chat/group defined in `./botConfig.json`, create a environment variable like `<bot-name>_CHAT_ID_<chat-name>`. For example, in linux, if the bot name is `TEST_BOT` and the chat name is `CHAT_1`:
-      ```console
-      $ export TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
+    - Create a file `env.list` in the root of the project. Inside of it, define the next environment variables.
+    - For each Telegram chat/group defined in `./botConfig.json`, create a environment variable like `<bot-name>_CHAT_ID_<chat-name>`. For example, if the bot name is `TEST_BOT` and the chat name is `CHAT_1`:
+      ```Dockerfile
+      TEST_BOT_CHAT_ID_CHAT_1="<chat-id>"
       ```
-    - Define a variable for the bot token. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
-      ```console
-      $ export BOT_TOKEN_TEST_BOT="<bot-token>"
+    - Define also a variable for the token of the bot. It must follows this convention: `BOT_TOKEN_<bot-name>`. Following the same example, we would have to define it like this:
+      ```Dockerfile
+      BOT_TOKEN_TEST_BOT="<bot-token>"
       ```
 4. (_Optionally_) Initialise the registries so already uploaded PDFs are not sent to the Telegram groups:
 ```console
-$ docker run aemet_tg_bot
+$ docker run --env-file ./env.list aemet_tg_bot
 ```
 5. Run the bot
 ```console
-$ docker run aemet_tg_bot run --bot-config=./botConfig.json
+$ docker run --env-file ./env.list aemet_tg_bot run --bot-config=./botConfig.json
 ```
 
 ### Without Docker
