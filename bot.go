@@ -324,7 +324,7 @@ func usage() {
 		"    run    --bot-config=<config-path>    Start running the bot.\n" +
 		"    init   --bot-config=<config-path>    Initialise the registries by running the bot.\n" +
 		"                                         Only the error messages to admin chat, if\n" +
-		"                                         configured, will be sent.\n")
+		"                                         configured, will be sent.")
 }
 
 func nextFlagValue(command, flag string, args []string) string {
