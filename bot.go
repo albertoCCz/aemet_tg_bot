@@ -198,6 +198,7 @@ var commands = []tele.Command{
 	tele.Command{Text: "/help", Description: "Commands info"},
 	tele.Command{Text: "/pause", Description: "Pause the bot"},
 	tele.Command{Text: "/play", Description: "Restart bot if paused"},
+	tele.Command{Text: "/state", Description: "Current bot state (running/paused)"},
 }
 
 func usage_commands() string {
@@ -246,6 +247,24 @@ func handle_run_command(configPath string) {
 	bot.Handle("/play", func (c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			paused = false
+		}
+		return nil
+	})
+
+	bot.Handle("/state", func (c tele.Context) error {
+		if is_admin_chat(&c, &botConfig) {
+			var msg string
+			if paused {
+				msg = fmt.Sprintf("I'm paused... &#x%s;", "1F6C0")   // bath unicode symbol
+			} else {
+				msg = fmt.Sprintf("I'm running... &#x%s;", "1F3C3")   // running person unicode symbol
+			}
+
+			err = c.Send(msg, &tele.SendOptions{ParseMode: "HTML"})
+			if err != nil {
+				log.Println("[ERROR] Could not send response for /state command")
+			}
+			return err
 		}
 		return nil
 	})
