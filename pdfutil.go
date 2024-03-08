@@ -31,26 +31,26 @@ func parsePDFDate(pdf *PDF) error {
 			s = strings.ReplaceAll(s, "del", "de")
 		}
 
-		s = strings.ReplaceAll(s, " de", " ")
-		s = strings.ReplaceAll(s, "de ", " ")
-		s = strings.ReplaceAll(s, "  ", " ")
-		s_comp := strings.Split(s, " ")
+		s_comp := strings.Split(s, "de")
 		if n_comp := len(s_comp); n_comp == 3 || n_comp == 2 {
 			var day_int, year_int int = 0, 0
 			var err error = nil
 			var parsing_ok bool = true
+			var comp string
 
 			// day
-			day_int, err = strconv.Atoi(s_comp[0])
+			comp = strings.TrimSpace(s_comp[0])
+			day_int, err = strconv.Atoi(comp)
 			if err != nil {
 				log.Printf("Could not parse day '%s' as int\n", s_comp[0])
 				parsing_ok = false
 			}
 
 			// month
-			month_time, ok := MONTHS_ES[s_comp[1]]
+			comp = strings.TrimSpace(s_comp[1])
+			month_time, ok := MONTHS_ES[comp]
 			if !ok {
-				log.Printf("Could not parse month '%s' as int\n", s_comp[1])
+				log.Printf("Could not parse month '%s' as int\n", comp)
 				parsing_ok = false
 			}
 
@@ -58,9 +58,10 @@ func parsePDFDate(pdf *PDF) error {
 			if n_comp == 2 {
 				year_int = time.Now().Year()
 			} else {
-				year_int, err = strconv.Atoi(s_comp[2])
+				comp = strings.TrimSpace(s_comp[2])
+				year_int, err = strconv.Atoi(comp)
 				if err != nil {
-					log.Printf("Could not parse year '%s' as int\n", s_comp[2])
+					log.Printf("Could not parse year '%s' as int\n", comp)
 					parsing_ok = false
 				}
 			}
