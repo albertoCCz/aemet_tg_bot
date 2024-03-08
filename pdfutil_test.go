@@ -44,13 +44,6 @@ func TestParsePDFDate(t *testing.T) {
 	}
 }
 
-func BenchmarkParsePDFDate(b *testing.B) {
-	pdf := PDF{Date: "Fecha de publicación: 2 de noviembre de 2030 some other text"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		parsePDFDate(&pdf)
-	}
-}
 
 func TestParsePDFName(t *testing.T) {
     want := "my pdf name"
