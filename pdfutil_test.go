@@ -2,7 +2,9 @@ package main
 
 import	(
 	"testing"
+	"fmt"
 	"strings"
+	"time"
 	// "golang.org/x/net/html"
 )
 
@@ -10,34 +12,40 @@ import	(
 var errFmtString = "want: '%s'; got: '%s'\n"
 
 func TestParsePDFDate(t *testing.T) {
-	want := "02/11/2030"
+	thisYear := fmt.Sprintf("%d", time.Now().Year())
+	want := "02/11/" + thisYear
 
-	pdf := PDF{Date: "Fecha de publicación: 2 de noviembre de 2030 some other text"}
+	pdf := PDF{Date: fmt.Sprintf("Fecha de publicación: 2 de noviembre de %s some other text", thisYear)}
 	parsePDFDate(&pdf)
 	if pdf.Date != want {
 		t.Errorf(errFmtString, want, pdf.Date)
 	}
 
-	pdf.Date = "   Fecha de publicación: 2 de noviembre de 2030 some other text  "
+	pdf.Date = fmt.Sprintf("   Fecha de publicación: 2 de noviembre de %s some other text  ", thisYear)
 	parsePDFDate(&pdf)
 	if pdf.Date != want {
 		t.Errorf(errFmtString, want, pdf.Date)
 	}
 
-	pdf.Date = "   Fecha de publicación: 2 de noviembre del 2030 some other text  "
+	pdf.Date = fmt.Sprintf("   Fecha de publicación: 2 de noviembre del %s some other text  ", thisYear)
 	parsePDFDate(&pdf)
 	if pdf.Date != want {
 		t.Errorf(errFmtString, want, pdf.Date)
 	}
 
-
-	pdf.Date = "   Fecha de publicación: 2 de noviembre de 2030some other text  "
+	pdf.Date = fmt.Sprintf("   Fecha de publicación: 2 de noviembre de %ssome other text  ", thisYear)
 	parsePDFDate(&pdf)
 	if pdf.Date != want {
 		t.Errorf(errFmtString, want, pdf.Date)
 	}
 
-	pdf.Date = "   Fecha de publicación: 2de noviembre del2030some other text  "
+	pdf.Date = fmt.Sprintf("   Fecha de publicación: 2de noviembre del%ssome other text  ", thisYear)
+	parsePDFDate(&pdf)
+	if pdf.Date != want {
+		t.Errorf(errFmtString, want, pdf.Date)
+	}
+
+	pdf.Date = "   Fecha de publicación: 2de noviembre other text  "
 	parsePDFDate(&pdf)
 	if pdf.Date != want {
 		t.Errorf(errFmtString, want, pdf.Date)
