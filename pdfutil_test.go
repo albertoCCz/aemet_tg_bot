@@ -97,7 +97,7 @@ func TestGenPDFs(t *testing.T) {
 		want := PDF{
 			Name: "some pdf name",
 			Url: "some pdf url.pdf",
-			Date: "14/06/2023",
+			Date: "",
 		}
 
 		r := strings.NewReader(html)

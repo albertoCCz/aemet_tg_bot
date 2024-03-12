@@ -156,7 +156,8 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 							"https://www.aemet.es",
 							pdf.Url,
 							pdf.Name,
-							pdf.Date,
+							// pdf.Date,  NOTE: Only sending messages when PDF first appears.
+							//                  To know PDF date, check when the message was sent.
 						)
 						if _, err := bot.Send(&c, message, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
 							log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Could not send message to chat%s\n", c.Name, sp.Name, err)

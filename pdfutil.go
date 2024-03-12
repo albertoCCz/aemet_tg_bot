@@ -96,7 +96,8 @@ func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
 	pdf.Name = strings.TrimSpace(node.FirstChild.Data)
 	parsePDFName(&pdf)
 
-	if node.Parent != nil && node.Parent.Parent != nil {
+	// NOTE: date parsing disable, all dates will be left empty
+	if !(node.Parent != nil && node.Parent.Parent != nil) && (node.Parent != nil && node.Parent.Parent != nil) {
 		for sibling := node.Parent.Parent.FirstChild; sibling != nil; sibling = sibling.NextSibling {
 			if sibling.Type == html.ElementNode && sibling.Data == "p" {
 				pdf.Date = sibling.FirstChild.Data
