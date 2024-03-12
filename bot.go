@@ -120,7 +120,10 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 			for pdf, ok := <-pdfs; ok; pdf, ok = <-pdfs {
 				if _, exists := registry[pdf.Name]; !exists {
 					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%+v'\n", c.Name, sp.Name, pdf)
-					if pdf.Date == "" {
+
+					if false {  // NOTE: prev condition: pdf.Date == ""
+						//               now all pdfs do not have a date,
+						//               so this no longer makes sense
 						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Date not present for pdf '%s'\n", c.Name, sp.Name, pdf.Name)
 						err_message.errCode = BlankPDFDateError
 						err_message.pdfName = pdf.Name
