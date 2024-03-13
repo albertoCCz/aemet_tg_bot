@@ -76,12 +76,17 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 
 			var client *http.Client = &http.Client{}
 			res, err := client.Get(sp.Url)
-			if err != nil && res.StatusCode == 200 {
-				log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Something went wrong getting url. StatusCode: %d: '%s'\n", c.Name, sp.Name, res.StatusCode, err)
+			if err != nil {
+				if res != nil {    // if err != nil it might be the case that res is nil
+					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Something went wrong getting url. StatusCode: %d: '%s'\n", c.Name, sp.Name, res.StatusCode, err)
+					res.Body.Close()
+				} else {
+					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Something went wrong getting url: '%s'", c.Name, sp.Name, err)
+				}
+
 				err_message.errCode = GetUrlContentError
 				err_message.message = err
 				err_ch <- err_message
-				res.Body.Close()
 				return
 			}
 
