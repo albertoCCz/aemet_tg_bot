@@ -2,6 +2,7 @@ FROM golang:1.22
 
 VOLUME /usr/src/app/templates
 VOLUME /usr/src/app/pdfs-registry
+VOLUME /usr/src/app/logs
 
 WORKDIR /usr/src/app
 
