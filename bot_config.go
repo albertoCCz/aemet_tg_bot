@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 	"os"
-    "log"
 	"fmt"
 	"errors"
     "encoding/json"

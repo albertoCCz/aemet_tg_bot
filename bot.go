@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	loglib "log"
 	"time"
 	"os"
 	"strings"
@@ -10,8 +10,11 @@ import (
 	"errors"
 	"net/http"
 	"encoding/json"
+	logman "github.com/albertoCCz/logman"
 	tele "gopkg.in/telebot.v3"
 )
+
+var log *loglib.Logger
 
 type ProcessingErrorCode int
 const (
@@ -379,6 +382,8 @@ func main() {
 		os.Exit(-1)
 	}
 
+	lm := logman.New("./logs", "1h", "5MiB")
+	log = loglib.New(lm, "", loglib.LstdFlags)
 	switch command := os.Args[1]; command {
 	case "help":
 		usage()
