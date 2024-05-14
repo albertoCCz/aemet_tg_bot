@@ -114,7 +114,8 @@ func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
 func GenPDFs(r io.Reader, pdfs chan PDF) {
 	node, err := html.Parse(r)
 	if err != nil {
-		log.Fatal("Could not parse Node")
+		log.Println("Could not parse Node")
+		return
 	}
 
 	var f func(*html.Node)
