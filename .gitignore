@@ -1,6 +1,9 @@
 env
 __pycache__
+pdfs-registry
+logs
 
 test-*
 *~
 *.html
+aemet_tg_bot

@@ -1,0 +1,47 @@
+{
+    "Token": "",
+    "Name": "AEMET",
+    "TimeInterval": 5000000000,
+    "ChatAdminConfig": {
+        "ChatId": "",
+        "Name": "ADMIN"
+    },
+    "ChatConfigs": [
+        {
+            "ChatId": "",
+            "Name": "TEST_1",
+            "SelectiveProcs": [
+                {
+                    "Name": "Test1",
+                    "TemplatePath": "./templates/template_fmt.txt",
+                    "RegistryPath": "./pdfs-registry/pdfs-chat1-test1.json",
+                    "Url": "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022"
+                },
+                {
+                    "Name": "Test2",
+                    "TemplatePath": "./templates/template_fmt.txt",
+                    "RegistryPath": "./pdfs-registry/pdfs-chat1-test2.json",
+                    "Url": "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022"
+                }
+            ]
+        },
+        {
+            "ChatId": "",
+            "Name": "TEST_2",
+            "SelectiveProcs": [
+                {
+                    "Name": "Test1",
+                    "TemplatePath": "./templates/template_fmt.txt",
+                    "RegistryPath": "./pdfs-registry/pdfs-chat2-test1.json",
+                    "Url": "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/acceso_libre/acceso_libre_2021_2022"
+                },
+                {
+                    "Name": "Test2",
+                    "TemplatePath": "./templates/template_fmt.txt",
+                    "RegistryPath": "./pdfs-registry/pdfs-chat2-test2.json",
+                    "Url": "https://www.aemet.es/es/empleo_y_becas/empleo_publico/oposiciones/grupo_a1/promocion_interna/acceso_interna_2021_2022"
+                }
+            ]
+        }
+    ]
+}

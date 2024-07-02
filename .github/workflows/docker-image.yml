@@ -2,11 +2,11 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "go-rewrite" ]
 
 env:
   IMAGE_NAME: ${{ github.repository }}
-  
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -40,5 +40,6 @@ jobs:
         with:
           context: "{{defaultContext}}"
           push: true
+          platforms: linux/x86_64,linux/i386
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

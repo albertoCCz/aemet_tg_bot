@@ -1,0 +1,4 @@
+&#128226; Nuevo archivo disponible.
+
+- Acceso: <b>%s</b>
+- &#128196; Archivo: <a href="%s%s">%s</a>

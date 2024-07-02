@@ -1,5 +1,5 @@
 &#128226; Nuevo archivo disponible.
 
-- OEP: 2021-2022
 - Acceso: <b>{category}</b>
 - &#128196; Archivo: <a href="{pdf_url}">{pdf_name}</a>
+- &#128336; Fecha del documento: <b>{pdf_date}</b>
