@@ -63,6 +63,20 @@ func (errMessage *processingErrorMessage) Format() string {
 	)
 }
 
+var FilterErrors = false
+
+func (errMessage *processingErrorMessage) ToBeFiltered() bool {
+	if FilterErrors == false {
+		return false
+	}
+
+	// error filtering policy
+	if errMessage.errCode == GetUrlContentError {
+		return true
+	}
+	return false
+}
+
 type pdfRegistry map[string]map[string]string
 
 func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingErrorMessage, send_on bool) {
@@ -211,6 +225,7 @@ var commands = []tele.Command{
 	tele.Command{Text: "/pause", Description: "Pause the bot"},
 	tele.Command{Text: "/play", Description: "Restart bot if paused"},
 	tele.Command{Text: "/state", Description: "Current bot state (running/paused)"},
+	tele.Command{Text: "/switch_errors", Description: "Activate/Deactivate errors filtering"},
 }
 
 func usage_commands() string {
@@ -281,6 +296,24 @@ func handle_run_command(configPath string) {
 		return nil
 	})
 
+	bot.Handle("/switch_errors", func (c tele.Context) error {
+		if is_admin_chat(&c, &botConfig) {
+			FilterErrors = !FilterErrors
+			var msg string
+			if FilterErrors {
+				msg = fmt.Sprintf("Filtering activated")
+			} else {
+				msg = fmt.Sprintf("Filtering deactivated")
+			}
+			err = c.Send(msg, &tele.SendOptions{ParseMode: "HTML"})
+			if err != nil {
+				log.Println("[ERROR] Could not send response for /switch_errors command")
+			}
+			return err
+		}
+		return nil
+	})
+
 	go bot.Start()
 
 	err_chan := make(chan processingErrorMessage, 50)
@@ -289,9 +322,11 @@ func handle_run_command(configPath string) {
 			select {
 			case errMessageData := <-err_chan:
 				if botConfig.ChatAdminConfig != nil {
-					errMessage := errMessageData.Format()
-					if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
-						log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
+					if !errMessageData.ToBeFiltered() {
+						errMessage := errMessageData.Format()
+						if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
+							log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
+						}
 					}
 				}
 			default:
@@ -329,6 +364,7 @@ func handle_init_command(configPath string) {
 		select {
 		case errMessageData := <-err_chan:
 			if botConfig.ChatAdminConfig != nil {
+
 				errMessage := errMessageData.Format()
 				if _, err := bot.Send(botConfig.ChatAdminConfig, errMessage, &tele.SendOptions{ParseMode: "HTML"}); err != nil {
 					log.Printf("[ERROR] Could not send error message to admin chat: %s\n", err)
