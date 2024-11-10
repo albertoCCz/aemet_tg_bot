@@ -4,7 +4,7 @@ WORKDIR_APP = /usr/src/app
 ENTRYPOINT = /usr/bin/bash
 
 # Initialize bot registries. Do not send any message.
-init-bot: COMMAND = ./aemet_tg_bot init --bot-config=botConfig.json
+init-bot: COMMAND = go build && ./aemet_tg_bot init --bot-config=botConfig.json
 init-bot:
 	sudo docker run -dit \
 		--env-file ./env.list \
@@ -16,7 +16,7 @@ init-bot:
 		ghcr.io/albertoccz/aemet_tg_bot:main -c "$(COMMAND)"
 
 # Start the bot.
-run-bot: COMMAND = ./aemet_tg_bot run --bot-config=botConfig.json
+run-bot: COMMAND = go build && ./aemet_tg_bot run --bot-config=botConfig.json
 run-bot:
 	sudo docker run -dit \
 		--env-file ./env.list \
