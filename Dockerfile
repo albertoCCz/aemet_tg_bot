@@ -12,8 +12,5 @@ RUN go mod download && go mod verify
 COPY . .
 RUN go build -v -o /usr/local/bin/app ./...
 
-RUN go test -v
-RUN go test -bench . -benchmem -benchtime 5s
-
 ENTRYPOINT ["./aemet_tg_bot"]
 CMD ["init", "--bot-config=./botConfig.json"]
