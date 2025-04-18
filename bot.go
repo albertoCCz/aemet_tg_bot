@@ -249,7 +249,7 @@ func handle_run_command(configPath string) {
 				Proxy: http.ProxyFromEnvironment,
 			},
 			Timeout: 10 * time.Second,
-		}
+		},
 	}
 
 	bot, err := tele.NewBot(sett)
@@ -358,7 +358,7 @@ func handle_init_command(configPath string) {
 				Proxy: http.ProxyFromEnvironment,
 			},
 			Timeout: 10 * time.Second,
-		}
+		},
 	}
 
 	bot, err := tele.NewBot(sett)
