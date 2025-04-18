@@ -243,7 +243,13 @@ func handle_run_command(configPath string) {
 
 	sett := tele.Settings{
 		Token: botConfig.Token,
-		Poller: &tele.LongPoller{Timeout: botConfig.TimeInterval},
+		Poller: &tele.LongPoller{ Timeout: botConfig.TimeInterval },
+		Client: &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+			},
+			Timeout: 10 * time.Second,
+		}
 	}
 
 	bot, err := tele.NewBot(sett)
@@ -346,7 +352,13 @@ func handle_init_command(configPath string) {
 
 	sett := tele.Settings{
 		Token: botConfig.Token,
-		Poller: &tele.LongPoller{Timeout: botConfig.TimeInterval},
+		Poller: &tele.LongPoller{ Timeout: botConfig.TimeInterval },
+		Client: &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+			},
+			Timeout: 10 * time.Second,
+		}
 	}
 
 	bot, err := tele.NewBot(sett)
