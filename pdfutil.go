@@ -27,7 +27,7 @@ var MONTHS_ES = map[string]time.Month{
 }
 
 const DATE_REGEXP = `[0-9]{1,2}[ ]{0,1}de[l]{0,1} [a-z]{1,10} de[l]{0,1}[ ]{0,1}[0-9]{3,4}|[0-9]{1,2}[ ]{0,1}de [a-z]{1,10}`
-const PDF_SIZE_REGEXP = `\([0-9]{1,3}[ ]{0,1}KB\)`
+const PDF_SIZE_REGEXP = `\([0-9].*[ ]{0,1}KB\)`
 const DATE_LAYOUT = "02/01/2006"
 
 type PDF struct {
