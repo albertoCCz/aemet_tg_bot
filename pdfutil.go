@@ -11,7 +11,20 @@ import (
 	"time"
 )
 
-var MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
+var MONTHS_ES = map[string]time.Month{
+	"enero":      time.January,
+	"febrero":    time.February,
+	"marzo":      time.March,
+	"abril":      time.April,
+	"mayo":       time.May,
+	"junio":      time.June,
+	"julio":      time.July,
+	"agosto":     time.August,
+	"septiembre": time.September,
+	"octubre":    time.October,
+	"noviembre":  time.November,
+	"diciembre":  time.December,
+}
 
 const DATE_REGEXP = `[0-9]{1,2}[ ]{0,1}de[l]{0,1} [a-z]{1,10} de[l]{0,1}[ ]{0,1}[0-9]{3,4}|[0-9]{1,2}[ ]{0,1}de [a-z]{1,10}`
 const PDF_SIZE_REGEXP = `\([0-9]{1,3}[ ]{0,1}KB\)`
@@ -24,7 +37,7 @@ type PDF struct {
 }
 
 func parsePDFDate(pdf *PDF) error {
-	var re *regexp.Regexp = regexp.MustCompile(DATE_REGEXP)
+	var re = regexp.MustCompile(DATE_REGEXP)
 	s := re.FindString(pdf.Date)
 	if len(s) > 0 {
 		if strings.Contains(s, "del") {
@@ -33,9 +46,9 @@ func parsePDFDate(pdf *PDF) error {
 
 		s_comp := strings.Split(s, "de")
 		if n_comp := len(s_comp); n_comp == 3 || n_comp == 2 {
-			var day_int, year_int int = 0, 0
+			var day_int, year_int = 0, 0
 			var err error = nil
-			var parsing_ok bool = true
+			var parsing_ok = true
 			var comp string
 
 			// day
@@ -69,7 +82,7 @@ func parsePDFDate(pdf *PDF) error {
 			if !parsing_ok {
 				log.Printf("Could not parse date from date string '%s'.\n Leaving PDF date blank\n", s)
 				pdf.Date = ""
-				return errors.New(fmt.Sprintf("Date could not be parsed from '%s'", s))
+				return fmt.Errorf("date could not be parsed from '%s'", s)
 			}
 
 			pdf.Date = time.Date(year_int, month_time, day_int, 0, 0, 0, 0, time.UTC).Format(DATE_LAYOUT)
@@ -77,11 +90,11 @@ func parsePDFDate(pdf *PDF) error {
 		}
 	}
 	pdf.Date = ""
-	return errors.New(fmt.Sprintf("Date could not be parsed. Regexp do not match with date string '%s'", pdf.Date))
+	return fmt.Errorf("date could not be parsed. Regexp do not match with date string '%s'", pdf.Date)
 }
 
 func parsePDFName(pdf *PDF) {
-	var re *regexp.Regexp = regexp.MustCompile(PDF_SIZE_REGEXP)
+	var re = regexp.MustCompile(PDF_SIZE_REGEXP)
 	if s := re.FindString(pdf.Name); len(s) > 0 {
 		pdf.Name = strings.ReplaceAll(pdf.Name, s, "")
 	}
@@ -90,7 +103,7 @@ func parsePDFName(pdf *PDF) {
 
 func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
 	if node.FirstChild == nil {
-		return PDF{}, errors.New("Node has no child")
+		return PDF{}, errors.New("node has no child")
 	}
 
 	var pdf PDF
@@ -99,7 +112,7 @@ func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
 	parsePDFName(&pdf)
 
 	// NOTE: date parsing disable, all dates will be left empty
-	if !(node.Parent != nil && node.Parent.Parent != nil) && (node.Parent != nil && node.Parent.Parent != nil) {
+	if (node.Parent == nil || node.Parent.Parent == nil) && (node.Parent != nil && node.Parent.Parent != nil) {
 		for sibling := node.Parent.Parent.FirstChild; sibling != nil; sibling = sibling.NextSibling {
 			if sibling.Type == html.ElementNode && sibling.Data == "p" {
 				pdf.Date = sibling.FirstChild.Data
@@ -142,5 +155,4 @@ func GenPDFs(r io.Reader, pdfs chan PDF) {
 	}
 	f(node)
 	close(pdfs)
-	return
 }

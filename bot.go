@@ -67,7 +67,7 @@ func (errMessage *processingErrorMessage) Format() string {
 var FilterErrors = false
 
 func (errMessage *processingErrorMessage) ToBeFiltered() bool {
-	if FilterErrors == false {
+	if !FilterErrors {
 		return false
 	}
 
@@ -81,8 +81,7 @@ func (errMessage *processingErrorMessage) ToBeFiltered() bool {
 type pdfRegistry map[string]map[string]string
 
 func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingErrorMessage, send_on bool) {
-	var procChat func(ChatConfig)
-	procChat = func(c ChatConfig) {
+	procChat := func(c ChatConfig) {
 		for _, sp := range c.SelectiveProcs {
 			log.Printf("[INFO] Processing updates for chat %s[%s], selective process '%s'\n", c.Name, c.ChatId, sp.Name)
 
@@ -92,7 +91,7 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 				pdfName:  "",
 			}
 
-			var client *http.Client = &http.Client{}
+			var client = &http.Client{}
 			res, err := client.Get(sp.Url)
 			if err != nil {
 				if res != nil { // if err != nil it might be the case that res is nil
@@ -202,8 +201,6 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 	for _, c := range botConfig.ChatConfigs {
 		go procChat(c)
 	}
-
-	return
 }
 
 func is_admin_chat(c *tele.Context, bc *BotConfig) bool {
@@ -222,11 +219,11 @@ func is_admin_chat(c *tele.Context, bc *BotConfig) bool {
 }
 
 var commands = []tele.Command{
-	tele.Command{Text: "/help", Description: "Commands info"},
-	tele.Command{Text: "/pause", Description: "Pause the bot"},
-	tele.Command{Text: "/play", Description: "Restart bot if paused"},
-	tele.Command{Text: "/state", Description: "Current bot state (running/paused)"},
-	tele.Command{Text: "/switch_errors", Description: "Activate/Deactivate errors filtering"},
+	{Text: "/help", Description: "Commands info"},
+	{Text: "/pause", Description: "Pause the bot"},
+	{Text: "/play", Description: "Restart bot if paused"},
+	{Text: "/state", Description: "Current bot state (running/paused)"},
+	{Text: "/switch_errors", Description: "Activate/Deactivate errors filtering"},
 }
 
 func usage_commands() string {
@@ -289,9 +286,9 @@ func handle_run_command(configPath string) {
 		if is_admin_chat(&c, &botConfig) {
 			var msg string
 			if paused {
-				msg = fmt.Sprintf("I'm paused... &#x%s;", "1F6C0") // bath unicode symbol
+				msg = fmt.Sprintf("I'm paused... &#x%s;", "1F6C0") // unicode symbol: bath
 			} else {
-				msg = fmt.Sprintf("I'm running... &#x%s;", "1F3C3") // running person unicode symbol
+				msg = fmt.Sprintf("I'm running... &#x%s;", "1F3C3") // unicode symbol: person running
 			}
 
 			err = c.Send(msg, &tele.SendOptions{ParseMode: "HTML"})
@@ -308,9 +305,9 @@ func handle_run_command(configPath string) {
 			FilterErrors = !FilterErrors
 			var msg string
 			if FilterErrors {
-				msg = fmt.Sprintf("Filtering activated")
+				msg = "Filtering activated"
 			} else {
-				msg = fmt.Sprintf("Filtering deactivated")
+				msg = "Filtering deactivated"
 			}
 			err = c.Send(msg, &tele.SendOptions{ParseMode: "HTML"})
 			if err != nil {
