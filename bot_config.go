@@ -1,11 +1,10 @@
 package main
 
 import (
-	"time"
-	"os"
+	"encoding/json"
 	"fmt"
-	"errors"
-    "encoding/json"
+	"os"
+	"time"
 )
 
 var DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -36,8 +35,8 @@ func (c *ChatConfig) Recipient() string {
 }
 
 type ChatAdminConfig struct {
-	ChatId           string
-	Name             string
+	ChatId string
+	Name   string
 }
 
 func (c *ChatAdminConfig) Recipient() string {
@@ -55,14 +54,14 @@ type BotConfig struct {
 func loadEnvVars(bc *BotConfig) error {
 	envVar := fmt.Sprintf("BOT_TOKEN_%s", bc.Name)
 	if token, ok := os.LookupEnv(envVar); !ok {
-		return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
+		return fmt.Errorf("[ERROR] Environment variable '%s' is unset", envVar)
 	} else {
 		bc.Token = token
 	}
 
 	envVar = fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatAdminConfig.Name)
 	if chatId, ok := os.LookupEnv(envVar); !ok {
-		return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
+		return fmt.Errorf("[ERROR] Environment variable '%s' is unset", envVar)
 	} else {
 		bc.ChatAdminConfig.ChatId = chatId
 	}
@@ -70,7 +69,7 @@ func loadEnvVars(bc *BotConfig) error {
 	for i := range len(bc.ChatConfigs) {
 		envVar = fmt.Sprintf("%s_CHAT_ID_%s", bc.Name, bc.ChatConfigs[i].Name)
 		if chatId, ok := os.LookupEnv(envVar); !ok {
-			return errors.New(fmt.Sprintf("[ERROR] Environment variable '%s' is unset", envVar))
+			return fmt.Errorf("[ERROR] Environment variable '%s' is unset", envVar)
 		} else {
 			bc.ChatConfigs[i].ChatId = chatId
 		}

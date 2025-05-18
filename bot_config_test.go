@@ -1,32 +1,31 @@
 package main
 
 import (
-	"testing"
 	"errors"
+	"testing"
 )
-
 
 func TestLoadEnvVars(t *testing.T) {
 	botCon := BotConfig{
 		Token: "",
-		Name: "bot_name",
+		Name:  "bot_name",
 		ChatAdminConfig: &ChatAdminConfig{
 			ChatId: "",
-			Name: "admin_name",
+			Name:   "admin_name",
 		},
 		ChatConfigs: []ChatConfig{
 			ChatConfig{
 				ChatId: "",
-				Name: "chat_1_name",
+				Name:   "chat_1_name",
 			},
 			ChatConfig{
 				ChatId: "",
-				Name: "chat_2_name",
+				Name:   "chat_2_name",
 			},
 		},
 	}
 
-	t.Run("AllEnvVarsExist", func (t *testing.T) {
+	t.Run("AllEnvVarsExist", func(t *testing.T) {
 		t.Setenv("BOT_TOKEN_bot_name", "12")
 		t.Setenv("bot_name_CHAT_ID_admin_name", "34")
 		t.Setenv("bot_name_CHAT_ID_chat_1_name", "56")
@@ -39,7 +38,7 @@ func TestLoadEnvVars(t *testing.T) {
 		}
 	})
 
-	t.Run("MissingEnvVar/BOT_TOKEN", func (t *testing.T) {
+	t.Run("MissingEnvVar/BOT_TOKEN", func(t *testing.T) {
 		t.Setenv("bot_name_CHAT_ID_admin_name", "34")
 		t.Setenv("bot_name_CHAT_ID_chat_1_name", "56")
 		t.Setenv("bot_name_CHAT_ID_chat_2_name", "78")
@@ -51,7 +50,7 @@ func TestLoadEnvVars(t *testing.T) {
 		}
 	})
 
-	t.Run("MissingEnvVar/REGULAR_CHAT", func (t *testing.T) {
+	t.Run("MissingEnvVar/REGULAR_CHAT", func(t *testing.T) {
 		t.Setenv("BOT_TOKEN_bot_name", "12")
 		t.Setenv("bot_name_CHAT_ID_admin_name", "34")
 		t.Setenv("bot_name_CHAT_ID_chat_2_name", "78")
@@ -63,7 +62,7 @@ func TestLoadEnvVars(t *testing.T) {
 		}
 	})
 
-	t.Run("MissingEnvVar/ADMIN_CHAT", func (t *testing.T) {
+	t.Run("MissingEnvVar/ADMIN_CHAT", func(t *testing.T) {
 		t.Setenv("BOT_TOKEN_bot_name", "12")
 		t.Setenv("bot_name_CHAT_ID_chat_1_name", "56")
 		t.Setenv("bot_name_CHAT_ID_chat_2_name", "78")
@@ -79,19 +78,19 @@ func TestLoadEnvVars(t *testing.T) {
 func TestObfuscate(t *testing.T) {
 	botCon := BotConfig{
 		Token: "bot_token",
-		Name: "bot_name",
+		Name:  "bot_name",
 		ChatAdminConfig: &ChatAdminConfig{
 			ChatId: "admin_id",
-			Name: "admin_name",
+			Name:   "admin_name",
 		},
 		ChatConfigs: []ChatConfig{
 			ChatConfig{
 				ChatId: "chat_1_id",
-				Name: "chat_1_name",
+				Name:   "chat_1_name",
 			},
 			ChatConfig{
 				ChatId: "chat_2_id",
-				Name: "chat_2_name",
+				Name:   "chat_2_name",
 			},
 		},
 	}
