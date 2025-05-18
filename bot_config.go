@@ -1,11 +1,11 @@
 package main
 
 import (
-	"time"
-	"os"
-	"fmt"
+	"encoding/json"
 	"errors"
-    "encoding/json"
+	"fmt"
+	"os"
+	"time"
 )
 
 var DEFAULT_DATE = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -36,8 +36,8 @@ func (c *ChatConfig) Recipient() string {
 }
 
 type ChatAdminConfig struct {
-	ChatId           string
-	Name             string
+	ChatId string
+	Name   string
 }
 
 func (c *ChatAdminConfig) Recipient() string {

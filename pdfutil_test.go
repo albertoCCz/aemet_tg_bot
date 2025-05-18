@@ -1,12 +1,11 @@
 package main
 
-import	(
-	"testing"
+import (
 	"fmt"
 	"strings"
+	"testing"
 	"time"
 )
-
 
 var errFmtString = "want: '%s'; got: '%s'\n"
 
@@ -60,7 +59,7 @@ func BenchmarkParsePDFDate(b *testing.B) {
 }
 
 func TestParsePDFName(t *testing.T) {
-    want := "my pdf name"
+	want := "my pdf name"
 
 	pdf := PDF{Name: "my pdf name"}
 	parsePDFName(&pdf)
@@ -88,7 +87,7 @@ func TestParsePDFName(t *testing.T) {
 }
 
 func TestGenPDFs(t *testing.T) {
-	t.Run("CorrectHTMLStruct", func (t *testing.T) {
+	t.Run("CorrectHTMLStruct", func(t *testing.T) {
 		html := "<div class=\"disclaimer\">" +
 			"<a href=\"some pdf url.pdf\" target=\"_blank\"> <img alt=\"TO DO xalan:\" src=\"/imagenes_gcd/_iconos_docs_adjuntos/pdf.gif\" title=\"TO DO xalan:\"></a>" +
 			"<span> <a href=\"some pdf url.pdf\" target=\"_blank\">some pdf name (757 KB)</a></span>" +
@@ -96,7 +95,7 @@ func TestGenPDFs(t *testing.T) {
 
 		want := PDF{
 			Name: "some pdf name",
-			Url: "some pdf url.pdf",
+			Url:  "some pdf url.pdf",
 			Date: "",
 		}
 
@@ -118,34 +117,34 @@ func TestGenPDFs(t *testing.T) {
 		}
 	})
 
-		t.Run("NoDateHTMLStruct", func (t *testing.T) {
-			html := "<div class=\"disclaimer\">" +
-				"<a href=\"some pdf url.pdf\" target=\"_blank\"> <img alt=\"TO DO xalan:\" src=\"/imagenes_gcd/_iconos_docs_adjuntos/pdf.gif\" title=\"TO DO xalan:\"></a>" +
-				"<span> <a href=\"some pdf url.pdf\" target=\"_blank\">some pdf name (757 KB)</a></span>" +
-				"</div>"
+	t.Run("NoDateHTMLStruct", func(t *testing.T) {
+		html := "<div class=\"disclaimer\">" +
+			"<a href=\"some pdf url.pdf\" target=\"_blank\"> <img alt=\"TO DO xalan:\" src=\"/imagenes_gcd/_iconos_docs_adjuntos/pdf.gif\" title=\"TO DO xalan:\"></a>" +
+			"<span> <a href=\"some pdf url.pdf\" target=\"_blank\">some pdf name (757 KB)</a></span>" +
+			"</div>"
 
-			want := PDF{
-				Name: "some pdf name",
-				Url: "some pdf url.pdf",
-				Date: "",
-			}
+		want := PDF{
+			Name: "some pdf name",
+			Url:  "some pdf url.pdf",
+			Date: "",
+		}
 
-			r := strings.NewReader(html)
-			c := make(chan PDF)
-			go GenPDFs(r, c)
+		r := strings.NewReader(html)
+		c := make(chan PDF)
+		go GenPDFs(r, c)
 
-			pdf := <-c
-			if pdf.Name != want.Name {
-				t.Errorf(errFmtString, want.Name, pdf.Name)
-			}
+		pdf := <-c
+		if pdf.Name != want.Name {
+			t.Errorf(errFmtString, want.Name, pdf.Name)
+		}
 
-			if pdf.Url != want.Url {
-				t.Errorf(errFmtString, want.Url, pdf.Url)
-			}
+		if pdf.Url != want.Url {
+			t.Errorf(errFmtString, want.Url, pdf.Url)
+		}
 
-			if pdf.Date != want.Date {
-				t.Errorf(errFmtString, want.Date, pdf.Date)
-			}
-		})
+		if pdf.Date != want.Date {
+			t.Errorf(errFmtString, want.Date, pdf.Date)
+		}
+	})
 
 }

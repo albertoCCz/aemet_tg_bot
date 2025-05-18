@@ -1,23 +1,24 @@
 package main
 
 import (
-    "time"
-    "io"
-    "fmt"
-    "errors"
-    "regexp"
-    "strings"
-    "strconv"
+	"errors"
+	"fmt"
 	"golang.org/x/net/html"
+	"io"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var MONTHS_ES = map[string]time.Month{"enero": time.January, "febrero": time.February, "marzo": time.March, "abril": time.April, "mayo": time.May, "junio": time.June, "julio": time.July, "agosto": time.August, "septiembre": time.September, "octubre": time.October, "noviembre": time.November, "diciembre": time.December}
+
 const DATE_REGEXP = `[0-9]{1,2}[ ]{0,1}de[l]{0,1} [a-z]{1,10} de[l]{0,1}[ ]{0,1}[0-9]{3,4}|[0-9]{1,2}[ ]{0,1}de [a-z]{1,10}`
 const PDF_SIZE_REGEXP = `\([0-9]{1,3}[ ]{0,1}KB\)`
 const DATE_LAYOUT = "02/01/2006"
 
 type PDF struct {
-	Url string
+	Url  string
 	Name string
 	Date string
 }
@@ -88,7 +89,9 @@ func parsePDFName(pdf *PDF) {
 }
 
 func buildPDF(node *html.Node, a *html.Attribute) (PDF, error) {
-	if node.FirstChild == nil { return PDF{}, errors.New("Node has no child") }
+	if node.FirstChild == nil {
+		return PDF{}, errors.New("Node has no child")
+	}
 
 	var pdf PDF
 	pdf.Url = a.Val
@@ -125,7 +128,9 @@ func GenPDFs(r io.Reader, pdfs chan PDF) {
 				if a.Key == "href" && strings.HasSuffix(a.Val, ".pdf") {
 					pdf, err := buildPDF(n, &a)
 					if err == nil {
-						if len(pdf.Name) > 0 { pdfs <- pdf }
+						if len(pdf.Name) > 0 {
+							pdfs <- pdf
+						}
 					}
 					break
 				}

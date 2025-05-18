@@ -1,22 +1,23 @@
 package main
 
 import (
-	"fmt"
-	loglib "log"
-	"time"
-	"os"
-	"strings"
-	"strconv"
-	"errors"
-	"net/http"
 	"encoding/json"
+	"errors"
+	"fmt"
 	logman "github.com/albertoCCz/logman"
 	tele "gopkg.in/telebot.v3"
+	loglib "log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var log *loglib.Logger
 
 type ProcessingErrorCode int
+
 const (
 	SendMessageError ProcessingErrorCode = iota + 1
 	ReadTemplateError
@@ -29,14 +30,14 @@ const (
 )
 
 var processingErrorCodeToString = map[ProcessingErrorCode]string{
-	SendMessageError: "SendMessageError",
-	ReadTemplateError: "ReadTemplateError",
-	ReadRegistryError: "ReadRegistryError",
-	WriteRegistryError: "WriteRegistryError",
+	SendMessageError:       "SendMessageError",
+	ReadTemplateError:      "ReadTemplateError",
+	ReadRegistryError:      "ReadRegistryError",
+	WriteRegistryError:     "WriteRegistryError",
 	UnmarshalRegistryError: "UnmarshalRegistryError",
-	MarshalRegistryError: "MarshalRegistryError",
-	GetUrlContentError: "GetUrlContentError",
-	BlankPDFDateError: "BlankPDFDateError",
+	MarshalRegistryError:   "MarshalRegistryError",
+	GetUrlContentError:     "GetUrlContentError",
+	BlankPDFDateError:      "BlankPDFDateError",
 }
 
 type processingErrorMessage struct {
@@ -88,13 +89,13 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 			err_message := processingErrorMessage{
 				chatName: c.Name,
 				procName: sp.Name,
-				pdfName: "",
+				pdfName:  "",
 			}
 
 			var client *http.Client = &http.Client{}
 			res, err := client.Get(sp.Url)
 			if err != nil {
-				if res != nil {    // if err != nil it might be the case that res is nil
+				if res != nil { // if err != nil it might be the case that res is nil
 					log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Something went wrong getting url. StatusCode: %d: '%s'\n", c.Name, sp.Name, res.StatusCode, err)
 					res.Body.Close()
 				} else {
@@ -143,7 +144,7 @@ func processUpdates(bot *tele.Bot, botConfig *BotConfig, err_ch chan processingE
 				if _, exists := registry[pdf.Name]; !exists {
 					log.Printf("[INFO] Chat '%s' - Selective process '%s'. New pdf found: '%+v'\n", c.Name, sp.Name, pdf)
 
-					if false {  // NOTE: prev condition: pdf.Date == ""
+					if false { // NOTE: prev condition: pdf.Date == ""
 						//               now all pdfs do not have a date,
 						//               so this no longer makes sense
 						log.Printf("[ERROR] Chat '%s' - Selective process '%s'. Date not present for pdf '%s'\n", c.Name, sp.Name, pdf.Name)
@@ -242,8 +243,8 @@ func handle_run_command(configPath string) {
 	botConfig.SetUp(configPath)
 
 	sett := tele.Settings{
-		Token: botConfig.Token,
-		Poller: &tele.LongPoller{ Timeout: botConfig.TimeInterval },
+		Token:  botConfig.Token,
+		Poller: &tele.LongPoller{Timeout: botConfig.TimeInterval},
 		Client: &http.Client{
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -258,7 +259,7 @@ func handle_run_command(configPath string) {
 		return
 	}
 
-	bot.Handle("/help", func (c tele.Context) error {
+	bot.Handle("/help", func(c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			err = c.Send(usage_commands(), &tele.SendOptions{ParseMode: "HTML"})
 			if err != nil {
@@ -270,27 +271,27 @@ func handle_run_command(configPath string) {
 	})
 
 	paused := false
-	bot.Handle("/pause", func (c tele.Context) error {
+	bot.Handle("/pause", func(c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			paused = true
 		}
 		return nil
 	})
 
-	bot.Handle("/play", func (c tele.Context) error {
+	bot.Handle("/play", func(c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			paused = false
 		}
 		return nil
 	})
 
-	bot.Handle("/state", func (c tele.Context) error {
+	bot.Handle("/state", func(c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			var msg string
 			if paused {
-				msg = fmt.Sprintf("I'm paused... &#x%s;", "1F6C0")   // bath unicode symbol
+				msg = fmt.Sprintf("I'm paused... &#x%s;", "1F6C0") // bath unicode symbol
 			} else {
-				msg = fmt.Sprintf("I'm running... &#x%s;", "1F3C3")   // running person unicode symbol
+				msg = fmt.Sprintf("I'm running... &#x%s;", "1F3C3") // running person unicode symbol
 			}
 
 			err = c.Send(msg, &tele.SendOptions{ParseMode: "HTML"})
@@ -302,7 +303,7 @@ func handle_run_command(configPath string) {
 		return nil
 	})
 
-	bot.Handle("/switch_errors", func (c tele.Context) error {
+	bot.Handle("/switch_errors", func(c tele.Context) error {
 		if is_admin_chat(&c, &botConfig) {
 			FilterErrors = !FilterErrors
 			var msg string
@@ -351,8 +352,8 @@ func handle_init_command(configPath string) {
 	botConfig.SetUp(configPath)
 
 	sett := tele.Settings{
-		Token: botConfig.Token,
-		Poller: &tele.LongPoller{ Timeout: botConfig.TimeInterval },
+		Token:  botConfig.Token,
+		Poller: &tele.LongPoller{Timeout: botConfig.TimeInterval},
 		Client: &http.Client{
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -398,12 +399,12 @@ func handle_init_command(configPath string) {
 func usage() {
 	fmt.Println(
 		"usage: ./aemet_tg_bot <command> [--bot-config=<config-path>]\n\n" +
-		"commands:\n" +
-	    "    help                                 Print this help.\n" +
-		"    run    --bot-config=<config-path>    Start running the bot.\n" +
-		"    init   --bot-config=<config-path>    Initialise the registries by running the bot.\n" +
-		"                                         Only the error messages to admin chat, if\n" +
-		"                                         configured, will be sent.")
+			"commands:\n" +
+			"    help                                 Print this help.\n" +
+			"    run    --bot-config=<config-path>    Start running the bot.\n" +
+			"    init   --bot-config=<config-path>    Initialise the registries by running the bot.\n" +
+			"                                         Only the error messages to admin chat, if\n" +
+			"                                         configured, will be sent.")
 }
 
 func nextFlagValue(command, flag string, args []string) string {
