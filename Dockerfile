@@ -1,4 +1,4 @@
-FROM golang:1.22
+FROM golang:1.24
 
 VOLUME /usr/src/app/templates
 VOLUME /usr/src/app/pdfs-registry
