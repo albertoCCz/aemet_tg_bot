@@ -1,5 +1,0 @@
-&#128226; Nuevo archivo disponible.
-
-- Acceso: <b>%s</b>
-- &#128196; Archivo: <a href="%s%s">%s</a>
-- &#128336; Fecha del documento: <b>%s</b>
