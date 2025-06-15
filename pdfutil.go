@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	"io"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
